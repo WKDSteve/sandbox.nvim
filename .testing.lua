@@ -46,6 +46,8 @@ return {
   conformance = {
     -- gated: a failed check makes `scripts/test.sh conformance` exit 1
     gate = true,
+    -- the container engine of the child editor (podman) may not answer on this machine: that is the environment, a warning
+    health_env = { "podman" },
     waivers = {
       {
         check = "K15",
