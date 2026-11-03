@@ -29,6 +29,12 @@ local function plain(s)
   return type(s) == "string" and s ~= "" and not s:find("[,\r\n%z]")
 end
 
+---@param s any
+---@return boolean
+local function option_safe(s)
+  return type(s) == "string" and s ~= "" and s:sub(1, 1) ~= "-"
+end
+
 --- The argv of `<bin> run`. Mounts use `--mount type=bind,...` rather than `-v src:dst[:ro]`
 --- because a Windows source path (`C:\x`) holds a colon.
 ---@param bin string
@@ -40,7 +46,15 @@ function M.argv(bin, opts)
   if type(opts) ~= "table" or type(opts.image) ~= "string" or opts.image == "" then
     return nil, "run_once: image is required"
   end
-  local name = (type(opts.name) == "string" and opts.name ~= "") and opts.name or unique_name()
+  -- The image is positional and the name is an argument of `kill`/`rm`: a leading `-` would be
+  -- read as an option (`kill -a`).
+  if not option_safe(opts.image) then
+    return nil, "run_once: image must not start with '-'"
+  end
+  if opts.name ~= nil and (not option_safe(opts.name) or opts.name:find("[^%w_.%-]")) then
+    return nil, "run_once: name must be letters, digits, '_', '.' or '-' and not start with '-'"
+  end
+  local name = opts.name or unique_name()
   local argv = { bin, "run", "--rm", "--name", name }
   argv[#argv + 1] = "--network"
   argv[#argv + 1] = (type(opts.network) == "string" and opts.network ~= "") and opts.network or "none"
@@ -83,12 +97,17 @@ function M.run(bin, opts, on_line, on_exit)
   local lines = require("lib.nvim.system.lines")
   local argv, err, name = M.argv(bin, opts)
   local finished, timed_out, cancelled = false, false, false
+  local timer
 
   local function finish(result)
     if finished then
       return
     end
     finished = true
+    if timer and not timer:is_closing() then
+      timer:stop()
+      timer:close()
+    end
     vim.schedule(function()
       on_exit(result)
     end)
@@ -162,7 +181,6 @@ function M.run(bin, opts, on_line, on_exit)
     end
   end
 
-  local timer
   if type(opts.timeout_ms) == "number" and opts.timeout_ms > 0 then
     timer = vim.defer_fn(function()
       if not finished then
@@ -178,9 +196,6 @@ function M.run(bin, opts, on_line, on_exit)
         return
       end
       cancelled = true
-      if timer and not timer:is_closing() then
-        timer:stop()
-      end
       stop()
     end,
   }
