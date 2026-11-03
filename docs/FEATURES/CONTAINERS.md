@@ -58,6 +58,22 @@ run` invocation.
 - **Module:** `sandbox/core/usecases/containers/run_container.lua`
 - **Usercmds:** `:Sandbox container run`
 
+## Run once (headless)
+
+`run_once(opts, on_line, on_exit)` starts a container attached with `--rm`, hands the output over line by
+line and reports the exit code; no window, no notification, usable without `setup()`. For callers such
+as `testing ci --on=linux` that need a container run without a terminal.
+- **Module:** `sandbox/core/usecases/containers/run_once.lua` (engine method `run_once`, docker, podman, nerdctl; shared
+  implementation `sandbox/util/run_once.lua`)
+- **Options** (`Sandbox.RunOnceOpts`): `image`, `command` (argv), `mounts` (`{ src, dst, ro }`, passed as
+  `--mount type=bind,...` so a Windows path survives), `workdir`, `env` (table), `name`, `network` (default
+  `none`), `timeout_ms`.
+- **Callbacks:** `on_line(stream, line)` per whole line (`"stdout"`/`"stderr"`), `on_exit({ code, timed_out,
+  cancelled, error? })` exactly once, after the last line. `code` is `-1` with `error` set when the run could
+  not be started (no image, bad mount, missing binary).
+- **Handle:** `cancel()`. A timeout and `cancel()` stop the **container** (`kill`, then `rm -f`) and then the
+  CLI process: killing only the CLI would leave the container running under the daemon.
+
 ## Start/stop/kill/restart, pause/unpause
 
 Standard lifecycle transitions. `start`/`stop`/`kill`/`restart` accept

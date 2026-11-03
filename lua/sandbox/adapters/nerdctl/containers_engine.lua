@@ -18,6 +18,7 @@ local stats_container = require("sandbox.adapters.nerdctl.containers.stats_conta
 local top_container = require("sandbox.adapters.nerdctl.containers.top_container")
 local cp_container = require("sandbox.adapters.nerdctl.containers.cp_container")
 local run_container = require("sandbox.adapters.nerdctl.containers.run_container")
+local run_once = require("sandbox.adapters.nerdctl.containers.run_once")
 local remove_container = require("sandbox.adapters.nerdctl.containers.remove_container")
 local inspect_container = require("sandbox.adapters.nerdctl.containers.inspect_container")
 local prune_containers = require("sandbox.adapters.nerdctl.containers.prune_containers")
@@ -39,6 +40,7 @@ return {
   top_container = top_container.top_container,
   cp_container = cp_container.cp_container,
   run_container = run_container.run_container,
+  run_once = run_once.run_once,
   remove_container = remove_container.remove_container,
   inspect_container = inspect_container.inspect_container,
   prune_containers = prune_containers.prune_containers,

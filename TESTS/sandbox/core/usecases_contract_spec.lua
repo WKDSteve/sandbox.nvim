@@ -39,6 +39,7 @@ local CONTRACT = {
   ["containers.rename_container"] = { method = "rename_container", args = { "id", "new_name" } },
   ["containers.restart_container"] = { method = "restart_container", args = { "id", "on_done" } },
   ["containers.run_container"] = { method = "run_container", args = { "opts", "on_done" } },
+  ["containers.run_once"] = { method = "run_once", args = { "opts", "on_line", "on_exit" } },
   ["containers.start_container"] = { method = "start_container", args = { "id" } },
   ["containers.stats_container"] = { method = "stats_container", args = { "id", "on_done" } },
   ["containers.stop_container"] = { method = "stop_container", args = { "id", "on_done" } },

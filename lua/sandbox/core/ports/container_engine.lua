@@ -36,6 +36,15 @@ return {
   exec_in_container = function(id, command)
     error(id .. ": exec_in_container not implemented. Command:  " .. vim.inspect(command))
   end,
+  --- Run a container once, attached, with `--rm`; headless. `on_line(stream, line)` per output line,
+  --- `on_exit({ code, timed_out, cancelled, error? })` once. Timeout and cancel kill the container.
+  --- @param _opts Sandbox.RunOnceOpts
+  --- @param _on_line? fun(stream: "stdout"|"stderr", line: string)
+  --- @param _on_exit fun(result: Sandbox.RunOnceResult)
+  --- @return { cancel: fun() } handle
+  run_once = function(_opts, _on_line, _on_exit)
+    error("run_once not implemented.")
+  end,
   --- @param id string
   --- @return boolean ok, string|nil err
   start_container = function(id)

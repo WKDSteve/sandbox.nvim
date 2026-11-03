@@ -18,6 +18,7 @@ local stats_container = require("sandbox.adapters.docker.containers.stats_contai
 local top_container = require("sandbox.adapters.docker.containers.top_container")
 local cp_container = require("sandbox.adapters.docker.containers.cp_container")
 local run_container = require("sandbox.adapters.docker.containers.run_container")
+local run_once = require("sandbox.adapters.docker.containers.run_once")
 local remove_container = require("sandbox.adapters.docker.containers.remove_container")
 local inspect_container = require("sandbox.adapters.docker.containers.inspect_container")
 local prune_containers = require("sandbox.adapters.docker.containers.prune_containers")
@@ -39,6 +40,7 @@ return {
   top_container = top_container.top_container,
   cp_container = cp_container.cp_container,
   run_container = run_container.run_container,
+  run_once = run_once.run_once,
   remove_container = remove_container.remove_container,
   inspect_container = inspect_container.inspect_container,
   prune_containers = prune_containers.prune_containers,

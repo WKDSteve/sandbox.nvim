@@ -55,6 +55,21 @@
 ---@class Sandbox.MenuOptions
 ---@field enable boolean|nil provide the right-click context menu on list-view buffers (default true)
 
+---@class Sandbox.RunOnceMount
+---@field src string Host path
+---@field dst string Path in the container
+---@field ro? boolean Read-only
+
+---@class Sandbox.RunOnceOpts
+---@field image string
+---@field command? string[] argv after the image
+---@field mounts? Sandbox.RunOnceMount[]
+---@field workdir? string
+---@field env? table<string, string>
+---@field name? string Default: a generated unique name
+---@field network? string Default `"none"`
+---@field timeout_ms? integer Kills the container after this long
+
 ---@class Sandbox.RunOpts
 ---@field image string
 ---@field name? string
