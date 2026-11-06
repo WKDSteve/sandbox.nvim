@@ -43,7 +43,7 @@ if you want to contribute one.
 ==============================================================================
 Requirements                                             *sandbox-requirements*
 
-- Neovim 0.10+
+- Neovim 0.11+
 - lib.nvim (https://github.com/WKDSteve/lib.nvim) — REQUIRED. The
   `:Sandbox`/`:Sbx` command tree is built on `lib.nvim.bindings.usercmd.composer`,
   and the buffer/window views under `lua/sandbox/ui/` depend on

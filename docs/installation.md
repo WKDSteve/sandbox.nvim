@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-- Neovim 0.10+
+- Neovim 0.11+
 - [`lib.nvim`](https://github.com/WKDSteve/lib.nvim) — **required**. The
   `:Sandbox`/`:Sbx` command layer is built on `lib.nvim.bindings.usercmd.composer`, and
   the buffer/window views under `lua/sandbox/ui/` depend on it directly.
