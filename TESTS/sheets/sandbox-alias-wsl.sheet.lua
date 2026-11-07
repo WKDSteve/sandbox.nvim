@@ -4,7 +4,8 @@
 -- the commands are registered again, so it runs on every platform. Fake CLIs (TESTS/sheets/_helpers.lua): no
 -- container, no distro is touched.
 
----Every `:Sbx` route that runs without a prompt, with the argv `:Sandbox` hands the engine for the same words.
+---Every `:Sbx` route that runs without a prompt (`confirm_destructive = false`), with the argv `:Sandbox` hands the
+---engine for the same words. `engine reset` last: it ends the docker override the others run under.
 local SAME = {
   "container list",
   "container exec sbx-web workdir=/tmp",
@@ -49,6 +50,24 @@ local SAME = {
   "wsl set-version sbx-wsl 1",
   "wsl export sbx-wsl ./d.tar",
   "wsl import sbx-new ./disk ./d.tar",
+  "wsl stop sbx-wsl",
+  "wsl shutdown-all",
+  "container logs-follow sbx-web",
+  "container start sbx-db",
+  "container stop sbx-web",
+  "container restart sbx-web",
+  "container kill sbx-web",
+  "container remove sbx-db",
+  "container prune",
+  "image remove alpine:edge",
+  "image prune",
+  "volume remove sbx-vol",
+  "volume prune",
+  "network remove sbx-net",
+  "network prune",
+  "compose restart",
+  "compose down",
+  "engine reset",
 }
 
 ---{ the `:Sandbox wsl` command, the argv wsl.exe must see, how it is run, the buffer it leaves focused }
@@ -78,7 +97,7 @@ local steps = {
       function _G.argvs_of(verb, words)
         _G.fresh()
         vim.cmd(verb .. " " .. words)
-        vim.wait(100)
+        vim.wait(60)
         vim.cmd("stopinsert")
         local seen = vim.tbl_map(function(c) return c.via .. " " .. c.argv end, _G.calls)
         local toasts = require("lib.nvim.notify.popup").history("sandbox")
@@ -94,15 +113,19 @@ local steps = {
   { wait = [[_G.noted("Active engine: docker (session override (:Sandbox engine set))")]] },
   {
     lua = [[_G.diff = {}
-      for _, words in ipairs(_G.same) do
-        local a, b = _G.argvs_of("Sandbox", words), _G.argvs_of("Sbx", words)
-        if not vim.deep_equal(a, b) then
-          _G.diff[#_G.diff + 1] = words .. ": " .. table.concat(a, "; ") .. " vs " .. table.concat(b, "; ")
+      -- routes `from`..`to` of the table through both names (in slices: one step must answer within 10 s)
+      function _G.compare(from, to)
+        for i = from, math.min(to, #_G.same) do
+          local words = _G.same[i]
+          local a, b = _G.argvs_of("Sandbox", words), _G.argvs_of("Sbx", words)
+          if not vim.deep_equal(a, b) then
+            _G.diff[#_G.diff + 1] = words .. ": " .. table.concat(a, "; ") .. " vs " .. table.concat(b, "; ")
+          end
         end
       end]],
-    note = "each route through both names",
   },
-  { expect = [[#_G.diff == 0 or error(table.concat(_G.diff, " | "), 0)]] },
+  { expect = [[#_G.diff == 0 or error(table.concat(_G.diff, " | "), 0)]], note = "each route through both names" },
+  { keys = ":Sbx engine set docker<CR>" },
   { lua = "_G.fresh()" },
   { keys = ":Sbx docs generate<CR>" },
   { wait = [[_G.noted("Generated docs/GENERATED_COMMANDS.md")]] },
@@ -139,6 +162,23 @@ for i = 1, #WSL do
   end
   steps[#steps + 1] = { wait = check }
 end
+-- The comparison slices go in front of the step that reads `_G.diff` (no `type`, `table.insert`: an empty env).
+for n = 1, #steps do
+  if steps[n].expect ~= nil and steps[n].expect:find("_G.diff", 1, true) then
+    local slices = {}
+    for from = 1, #SAME, 8 do
+      slices[#slices + 1] = { lua = ("_G.compare(%d, %d)"):format(from, from + 7) }
+    end
+    for k = #steps, n, -1 do
+      steps[k + #slices] = steps[k]
+    end
+    for k = 1, #slices do
+      steps[n + k - 1] = slices[k]
+    end
+    break
+  end
+end
+
 local tail = {
   { lua = [[vim.cmd("stopinsert"); vim.cmd.cd(vim.fn.fnameescape(_G.root))]] },
   { expect = [[#_G.other_spawns == 0 or error(vim.inspect(_G.other_spawns))]], note = "no real process" },

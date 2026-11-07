@@ -35,6 +35,20 @@ return {
             if t:find("pulled", 1, true) then return t end
           end
           return ""
+        end
+        -- the title of that float: its window title, or its first line when hover.nvim draws none
+        function _G.preview_title()
+          for _, w in ipairs(_G.floats()) do
+            local b = vim.api.nvim_win_get_buf(w)
+            if _G.text(b):find("pulled", 1, true) then
+              local t = vim.api.nvim_win_get_config(w).title
+              if type(t) == "table" then
+                t = table.concat(vim.tbl_map(function(c) return type(c) == "table" and c[1] or c end, t))
+              end
+              return (t and t ~= "") and t or vim.api.nvim_buf_get_lines(b, 0, 1, false)[1]
+            end
+          end
+          return ""
         end]],
       note = "a Dockerfile and a compose.yml in a temp project",
     },
@@ -61,6 +75,7 @@ return {
       expect = [[_G.has(_G.preview(), ":Sandbox image pull") and not _G.preview():find("container", 1, true)]],
       note = "the hint to pull, nothing else",
     },
+    { expect = [[_G.has(_G.preview_title(), "nginx:1.27-alpine")]], note = "titled with the reference" },
     { lua = [[vim.cmd("silent! fclose!")]] },
     { keys = "1G6|", note = "alpine:edge, pulled" },
     { keys = ":Hover show<CR>" },
