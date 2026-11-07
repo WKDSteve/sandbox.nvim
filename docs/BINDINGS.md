@@ -103,6 +103,7 @@ id/name argument — there is exactly one project per detected file.
 | `restart` | — | Restart the compose project |
 | `ps` | — | List services in the compose project |
 | `logs` | — | Show logs for the compose project |
+| `services` | — | List the services declared in the compose file, read from the file itself (no engine call, works with the engine down) |
 
 ## `:Sandbox engine <subcommand>` (alias: `:Sbx engine ...`)
 
