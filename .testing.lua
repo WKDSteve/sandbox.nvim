@@ -6,7 +6,8 @@ return {
   -- Lua module root of the project.
   plugin = "sandbox",
   -- Where the specs live (relative to this directory).
-  roots = { "TESTS/sandbox" },
+  -- TESTS itself for TESTS/sheets_spec.lua, the test sheets of TESTS/sheets/.
+  roots = { "TESTS/sandbox", "TESTS" },
   -- How the spec files are run: "auto" = sniffed per file, "h" = on the project's own TESTS/harness.lua,
   -- "script" = a self-running script in its own process.
   dialect = "auto",
@@ -16,6 +17,13 @@ return {
   -- "none" = all specs in one nvim, "file" = one nvim per spec file
   -- (nothing leaks from one file into the next).
   isolated = "file",
+  -- Environment variables the specs read; a child editor inherits an allowlist only (never secrets).
+  -- HOVER_NVIM_DIR: the way hover.nvim reaches the test sheets from the worktree of `ci commit`, where it is no
+  -- sibling (TESTS/minimal_init.lua finds it, only the hover sheet puts it on its runtimepath).
+  env_allow = { "HOVER_NVIM_DIR" },
+  -- All test sheets run in one spec file, one child editor each: the defaults of 10 s per case and 60 s per file
+  -- are reached under load (fileops, 2026-11-07).
+  timeouts = { case_ms = 30000, file_ms = 300000 },
   -- "c" = child started from a -c command (v:vim_did_enter is 0, <cword> works),
   -- "l" = `nvim -l`.
   host = "c",
@@ -37,7 +45,16 @@ return {
   guard_allow = {
     -- run_argv_spec starts real trivial processes (cmd on Windows; echo, printf and sleep elsewhere) and a deliberately
     -- non-existent binary to test the failed-spawn path; both are the subject of the spec.
-    spawn = { "cmd", "echo", "printf", "sleep", "sandbox-nvim-definitely-not-a-real-binary" },
+    spawn = {
+      "cmd",
+      "echo",
+      "printf",
+      "sleep",
+      "sandbox-nvim-definitely-not-a-real-binary",
+      -- sheets_spec.lua: every test sheet (TESTS/sheets/) runs in a child editor. The engine CLIs are faked inside
+      -- it (TESTS/sheets/_helpers.lua), so docker, podman and wsl are not on this list.
+      "nvim",
+    },
   },
   -- The runner counts which commands, keymaps and autocommands the specs exercise (docs/SURFACE.md of testing.nvim);
   -- `scripts/test.sh surface` compares that with surface.baseline.json (a regression gate, not a percentage).

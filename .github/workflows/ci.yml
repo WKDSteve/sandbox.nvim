@@ -67,6 +67,14 @@ jobs:
           path: ui.nvim
           ref: ci-verified
 
+      # hover.nvim: TESTS/minimal_init.lua requires it (a missing one is fatal); only the test sheet of the hover
+      # preview puts it on its runtimepath (TESTS/sheets/sandbox-hover.sheet.lua), so it runs here, not skips.
+      - uses: actions/checkout@v5
+        with:
+          repository: WKDSteve/hover.nvim
+          path: hover.nvim
+          ref: ci-verified
+
       - uses: rhysd/action-setup-vim@v1
         with:
           neovim: true
