@@ -22,7 +22,7 @@ live route table, and diff it against this file to catch drift.
 | `list` | — | List all containers (running and stopped) |
 | `logs` | `{id}` | Show logs for a container |
 | `logs-follow` | `{id}` | Stream a container's logs live (`logs -f`); `q` in the buffer stops following |
-| `exec` | `{id} [shell] [workdir=<path>]` | Open an interactive shell inside a container. `workdir=` becomes the engine's `-w` |
+| `exec` | `{id} [shell] [workdir=<path>]` | Open an interactive shell inside a container. `workdir=` becomes the engine's `-w`. A second session on the same container opens beside the first (`sandbox.nvim://exec/<id> (2)`) |
 | `exec-once` | `{id} [workdir=<path>] [command...]` | Run a one-off command and show the output |
 | `start` | `{id} [--buffer\|-b]` | Start a container |
 | `stop` | `{id} [--buffer\|-b]` | Stop a container |

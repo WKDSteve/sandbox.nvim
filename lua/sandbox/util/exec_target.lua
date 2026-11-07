@@ -12,6 +12,21 @@ local M = {}
 
 local warned = false
 
+--- The name of a new exec session's split buffer: `sandbox.nvim://exec/<id>`, or `... (2)`, `... (3)` while a session
+--- on the same container is still open. Every session had the same name, so a second `exec` on a container raised
+--- E95 and reported a failed exec although its shell had started.
+---@param container_id string
+---@return string
+function M.buffer_name(container_id)
+  local base = "sandbox.nvim://exec/" .. container_id
+  local name, n = base, 1
+  while vim.fn.bufexists(name) == 1 do
+    n = n + 1
+    name = ("%s (%d)"):format(base, n)
+  end
+  return name
+end
+
 --- Hand `args` to terminal.nvim when the option asks for it.
 ---@param args string[] The full argv, e.g. `{ "docker", "exec", "-it", id, "sh" }`
 ---@param container_id string

@@ -35,7 +35,7 @@ function M.exec_in_container(container_id, command, workdir)
     ---@diagnostic disable-next-line: deprecated
     vim.fn.termopen(args)
   end
-  vim.api.nvim_buf_set_name(buf, "sandbox.nvim://exec/" .. container_id)
+  vim.api.nvim_buf_set_name(buf, require("sandbox.util.exec_target").buffer_name(container_id))
   vim.bo[buf].bufhidden = "wipe"
 
   -- Automatically enter Terminal Insert Mode

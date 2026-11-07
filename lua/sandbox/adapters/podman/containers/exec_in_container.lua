@@ -31,7 +31,7 @@ function M.exec_in_container(container_id, command, workdir)
   vim.cmd("vnew")
 
   local buf = vim.api.nvim_get_current_buf()
-  vim.api.nvim_buf_set_name(buf, "sandbox.nvim://exec/" .. container_id)
+  vim.api.nvim_buf_set_name(buf, require("sandbox.util.exec_target").buffer_name(container_id))
 
   -- `jobstart({ term = true })` replaces the deprecated `termopen`, but only
   -- exists from 0.11; older supported versions fall back to the old call.
