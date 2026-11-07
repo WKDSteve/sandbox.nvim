@@ -33,8 +33,8 @@ return {
     },
     { lua = [[vim.wait(50)]] },
     {
-      expect = [[type(_G.status()) == "string" and not _G.status():find("(", 1, true) and vim.v.errmsg == ""]],
-      note = "degrades without an error and without stale counts",
+      expect = [[_G.status() == "docker" and vim.v.errmsg == ""]],
+      note = "degrades to the bare engine name (docs/statusline.md), no error, no stale counts",
     },
     { lua = [[_G.fail = {}]] },
 

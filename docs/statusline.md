@@ -5,8 +5,9 @@
 know whether anything is running without opening a list view.
 
 It is a plain Lua string with no hard dependency on any statusline plugin, the
-same soft-dependency philosophy as the rest of sandbox.nvim, and it degrades to
-`""` on any failure rather than erroring or notifying. A statusline is not the
+same soft-dependency philosophy as the rest of sandbox.nvim, and it degrades
+rather than erroring or notifying: to the bare engine name (`"docker"`) when the
+engine cannot answer, to `""` when no engine resolves. A statusline is not the
 place for an error popup.
 
 ## Wiring it up
@@ -77,9 +78,10 @@ local one it could be tighter.
   [FEATURES/ENGINES.md](FEATURES/ENGINES.md).
 - `running` counts containers whose status maps to the running highlight group;
   `total` is every container the engine lists.
-- No engine configured, or a daemon that does not answer, is an empty string.
-  There is deliberately no "error" state: a statusline that says something is
-  wrong every redraw is worse than one that says nothing.
+- No engine resolved is an empty string; a daemon that does not answer shows
+  the bare engine name, without counts (`"docker"`). There is deliberately no
+  "error" state: a statusline that says something is wrong every redraw is
+  worse than one that says nothing.
 
 For anything richer than a count, the list views are one keystroke away —
 [BINDINGS.md](BINDINGS.md#keymaps).

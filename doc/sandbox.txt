@@ -540,8 +540,9 @@ Statusline                                                 *sandbox-statusline*
 `require("sandbox.statusline").status()` returns an ambient
 `"engine (running/total)"` summary string (e.g. `"docker (2/5)"`), cached
 for |sandbox-config-status_cache_ttl_ms| so a statusline redrawing several
-times a second doesn't shell out on every call. It degrades to `""` on any failure (daemon down,
-no engine configured) instead of erroring — plain string return with no
+times a second doesn't shell out on every call. It degrades instead of
+erroring: to the bare engine name (`"docker"`) when the daemon is down, to `""`
+when no engine is configured — plain string return with no
 hard dependency on any statusline plugin.
 
 lualine: >lua
