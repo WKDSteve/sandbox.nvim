@@ -204,7 +204,7 @@ steps[1] = { lua = [[dofile(vim.fn.getcwd() .. "/TESTS/sheets/_helpers.lua"); _G
 return {
   id = "sandbox.alias-wsl",
   title = "sandbox.nvim: :Sbx runs every route :Sandbox runs, the same argv; the :Sandbox wsl routes",
-  task = "sandbox.nvim/testblatt-bindings-checkliste",
+  task = "sandbox.nvim/manual-checklist-run",
   sizes = { { rows = 40, cols = 160 } },
   steps = steps,
   manual = {

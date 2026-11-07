@@ -4,7 +4,7 @@
 return {
   id = "sandbox.list-keys",
   title = "sandbox.nvim: container list rows, status colors, and every row key acting on the row under the cursor",
-  task = "sandbox.nvim/testblatt-bindings-checkliste",
+  task = "sandbox.nvim/manual-checklist-run",
   sizes = { { rows = 40, cols = 140 } },
   steps = {
     { lua = [[dofile(vim.fn.getcwd() .. "/TESTS/sheets/_helpers.lua")]] },

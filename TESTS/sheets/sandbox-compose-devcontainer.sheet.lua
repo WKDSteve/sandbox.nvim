@@ -4,7 +4,7 @@
 return {
   id = "sandbox.compose-devcontainer",
   title = "sandbox.nvim: compose up/down/restart/ps/logs/services from the cwd, devcontainer build/attach/lazygit",
-  task = "sandbox.nvim/testblatt-bindings-checkliste",
+  task = "sandbox.nvim/manual-checklist-run",
   sizes = { { rows = 40, cols = 160 } },
   steps = {
     { lua = [[dofile(vim.fn.getcwd() .. "/TESTS/sheets/_helpers.lua")]] },

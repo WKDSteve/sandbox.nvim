@@ -4,7 +4,7 @@
 return {
   id = "sandbox.engine",
   title = "sandbox.nvim: engine get/set/reset, .sandboxrc precedence, E cycles and re-renders the list",
-  task = "sandbox.nvim/testblatt-bindings-checkliste",
+  task = "sandbox.nvim/manual-checklist-run",
   sizes = { { rows = 30, cols = 120 } },
   steps = {
     { lua = [[dofile(vim.fn.getcwd() .. "/TESTS/sheets/_helpers.lua")]] },

@@ -5,7 +5,7 @@
 return {
   id = "sandbox.statusline-docs",
   title = "sandbox.nvim: statusline 'engine (running/total)', cached for the TTL; docs generate and BINDINGS.md",
-  task = "sandbox.nvim/testblatt-bindings-checkliste",
+  task = "sandbox.nvim/manual-checklist-run",
   sizes = { { rows = 30, cols = 120 } },
   steps = {
     { lua = [[dofile(vim.fn.getcwd() .. "/TESTS/sheets/_helpers.lua")]] },

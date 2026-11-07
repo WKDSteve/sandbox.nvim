@@ -165,7 +165,7 @@ return {
   id = "sandbox.cmds-resources",
   title = "sandbox.nvim: every :Sandbox image, volume, network and registry command reaches the engine with "
     .. "the argv it names; the list keys",
-  task = "sandbox.nvim/testblatt-bindings-checkliste",
+  task = "sandbox.nvim/manual-checklist-run",
   sizes = { { rows = 40, cols = 160 } },
   steps = steps,
   manual = {

@@ -5,7 +5,7 @@ return {
   id = "sandbox.list-batch",
   title = "sandbox.nvim: refresh_interval re-renders while shown and stops when hidden or wiped; one confirmation "
     .. "per batch, naming its items",
-  task = "sandbox.nvim/testblatt-bindings-checkliste",
+  task = "sandbox.nvim/manual-checklist-run",
   sizes = { { rows = 40, cols = 140 } },
   steps = {
     { lua = [[dofile(vim.fn.getcwd() .. "/TESTS/sheets/_helpers.lua")]] },

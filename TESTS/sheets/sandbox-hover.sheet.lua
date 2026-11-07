@@ -5,7 +5,7 @@
 return {
   id = "sandbox.hover",
   title = "sandbox.nvim: :Hover show on an image reference says pulled or not pulled; never automatic",
-  task = "sandbox.nvim/testblatt-bindings-checkliste",
+  task = "sandbox.nvim/manual-checklist-run",
   sizes = { { rows = 40, cols = 140 } },
   requires = {
     { lua = "vim.g.sandbox_sheets_hover_nvim ~= nil", reason = "hover.nvim not found by TESTS/minimal_init.lua" },
