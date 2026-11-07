@@ -65,6 +65,13 @@ describe("adapters.*.containers.exec_in_container workdir", function()
       assert.are.same({ engine, "exec", "-it", "-w", "/srv", "abc123", "ls", "-la" }, captured)
     end)
 
+    -- exec-once is documented as non-interactive; it ran `exec -it` like a shell session.
+    it(engine .. ": interactive = false runs without -it, workdir and tail in place", function()
+      local M = require("sandbox.adapters." .. engine .. ".containers.exec_in_container")
+      M.exec_in_container("abc123", { "ls", "-la" }, "/srv", { interactive = false })
+      assert.are.same({ engine, "exec", "-w", "/srv", "abc123", "ls", "-la" }, captured)
+    end)
+
     it(engine .. ": an empty workdir is treated as none", function()
       local M = require("sandbox.adapters." .. engine .. ".containers.exec_in_container")
       M.exec_in_container("abc123", { "sh" }, "")

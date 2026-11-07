@@ -574,6 +574,15 @@ describe("usrcmds container exec", function()
     local call = call_of(H, "exec_in_container")
     assert.are.same({ "ls" }, call.args[2])
     assert.are.equal("/srv", call.args[3])
+    assert.are.same({ interactive = false }, call.args[4], "exec-once is non-interactive")
+  end)
+
+  it("keeps a shell session interactive", function()
+    local H = harness({})
+
+    load("container_commands").exec("abc123", "sh")
+
+    assert.is_nil(call_of(H, "exec_in_container").args[4])
   end)
 
   it("reports an engine that cannot exec instead of raising out of the command", function()

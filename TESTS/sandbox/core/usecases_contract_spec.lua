@@ -28,7 +28,7 @@ local CONTRACT = {
   ["compose.up"] = { method = "up", args = { "file", "on_done" }, engine = "compose" },
 
   ["containers.cp_container"] = { method = "cp_container", args = { "src", "dest" } },
-  ["containers.exec_in_container"] = { method = "exec_in_container", args = { "id", "shell_cmd", "workdir" } },
+  ["containers.exec_in_container"] = { method = "exec_in_container", args = { "id", "shell_cmd", "workdir", "opts" } },
   ["containers.get_container_logs"] = { method = "get_logs", args = { "id", "on_done" } },
   ["containers.inspect_container"] = { method = "inspect_container", args = { "id", "on_done" } },
   ["containers.kill_container"] = { method = "kill_container", args = { "id", "on_done" } },

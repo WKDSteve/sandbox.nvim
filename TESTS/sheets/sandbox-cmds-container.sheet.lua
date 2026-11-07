@@ -25,7 +25,7 @@ local C = {
     "term",
     "sandbox.nvim://exec/sbx-web",
   },
-  { "container exec-once sbx-web workdir=/tmp ls -la", "docker exec -it -w /tmp sbx-web ls -la", "term" },
+  { "container exec-once sbx-web workdir=/tmp ls -la", "docker exec -w /tmp sbx-web ls -la", "term" },
   { "container start sbx-db", "docker start sbx-db", "blocking" },
   { "container stop sbx-web", "docker stop --time=1 sbx-web", "job" },
   { "container kill sbx-web", "docker kill sbx-web", "job" },

@@ -133,7 +133,8 @@ function M.exec_once(id, command, workdir)
     command = nil
   end
 
-  local ok, err = pcall(usecase, engine, id, command, workdir)
+  -- Non-interactive, as documented: no `-it`, the command runs and its output stays in the split.
+  local ok, err = pcall(usecase, engine, id, command, workdir, { interactive = false })
   if not ok then
     notify.error("Failed to exec in container " .. id .. ": " .. tostring(err), { id = id, err = err })
   end
