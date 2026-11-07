@@ -399,7 +399,9 @@ end
 ---@param items table[]
 ---@param ref fun(item: table): string
 ---@param fn fun(id: string)
-function M.bulk_confirm_then(label, noun, items, ref, fn)
+---@param shown_as? fun(item: table): string  how an item reads in the question (default `ref`): the container
+---       list acts by id, but a person checks a selection against the names its rows show
+function M.bulk_confirm_then(label, noun, items, ref, fn, shown_as)
   local confirm = require("sandbox.util.confirm")
 
   -- Name what is about to go. The question used to read "Remove 5
@@ -412,7 +414,7 @@ function M.bulk_confirm_then(label, noun, items, ref, fn)
   local MAX_SHOWN = 10
   local shown = {}
   for i = 1, math.min(#items, MAX_SHOWN) do
-    shown[#shown + 1] = "  " .. tostring(ref(items[i]))
+    shown[#shown + 1] = "  " .. tostring((shown_as or ref)(items[i]))
   end
   if #items > MAX_SHOWN then
     shown[#shown + 1] = ("  … and %d more"):format(#items - MAX_SHOWN)

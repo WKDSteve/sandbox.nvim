@@ -264,6 +264,32 @@ describe("ui list views", function()
     assert.is_false(vim.bo[vim.api.nvim_get_current_buf()].modifiable)
   end)
 
+  -- The container rows act by id, so the batch question used to list bare ids ("  aaaaaaaaaaaabbbb"): the one
+  -- thing a person cannot check a selection against. It names the containers as their rows do.
+  it("the container batch question names the containers, as their rows do", function()
+    local asked = {}
+    package.loaded["sandbox.util.confirm"] = {
+      destructive = function(question)
+        asked[#asked + 1] = question
+      end,
+    }
+    local ok, err = pcall(function()
+      require("sandbox.ui.list_view")({
+        { id = "aaaaaaaaaaaabbbb", name = "web", status = "running" },
+        { id = "ccccccccccccdddd", name = "db", status = "exited" },
+      })
+      vim.api.nvim_win_set_cursor(0, { 1, 0 })
+      press("VjD")
+    end)
+    package.loaded["sandbox.util.confirm"] = nil
+    assert(ok, err)
+
+    assert.are.equal(1, #asked)
+    assert.is_truthy(asked[1]:find("Remove 2 containers?", 1, true), asked[1])
+    assert.is_truthy(asked[1]:find("  web (aaaaaaaaaaaa)", 1, true), asked[1])
+    assert.is_truthy(asked[1]:find("  db (cccccccccccc)", 1, true), asked[1])
+  end)
+
   it("the container list fills in placeholders for whatever the engine omitted", function()
     require("sandbox.ui.list_view")({ {} })
 

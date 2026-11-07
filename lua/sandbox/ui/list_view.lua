@@ -58,6 +58,14 @@ return function(containers, all)
   local function ref(c)
     return c.id or c.name
   end
+  ---How a container reads in a batch question: as its row does, name and short id.
+  ---@param c table
+  local function shown_as(c)
+    if c.name and c.id then
+      return c.name .. " (" .. c.id:sub(1, 12) .. ")"
+    end
+    return tostring(ref(c))
+  end
 
   list_actions.set_keymaps(
     bufnr,
@@ -243,14 +251,14 @@ return function(containers, all)
       lhs = "X",
       desc = "kill selection",
       fn = function(items)
-        list_actions.bulk_confirm_then("Kill", "container", items, ref, container_cmds.kill)
+        list_actions.bulk_confirm_then("Kill", "container", items, ref, container_cmds.kill, shown_as)
       end,
     },
     {
       lhs = "D",
       desc = "remove selection",
       fn = function(items)
-        list_actions.bulk_confirm_then("Remove", "container", items, ref, container_cmds.remove)
+        list_actions.bulk_confirm_then("Remove", "container", items, ref, container_cmds.remove, shown_as)
       end,
     },
   }, containers, 0, "containers")
