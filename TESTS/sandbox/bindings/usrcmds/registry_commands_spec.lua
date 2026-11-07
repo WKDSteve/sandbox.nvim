@@ -69,6 +69,46 @@ describe("bindings.usrcmds.registry_commands.login", function()
     assert.are.equal("info", notified[1].level)
   end)
 
+  -- Under podman a login without a registry used to report "Docker Hub", a default podman does not have.
+  for _, case in ipairs({
+    {
+      engine = "podman",
+      says = "Logged in to podman's default registry (docker.io unless registries.conf names another)",
+    },
+    { engine = "docker", says = "Logged in to Docker Hub" },
+    { engine = "nerdctl", says = "Logged in to Docker Hub" },
+  }) do
+    it(case.engine .. ": a login without a registry names that engine's default", function()
+      package.loaded["sandbox"].resolve_engine_name = function()
+        return case.engine
+      end
+      package.loaded["sandbox.core.usecases.registry.login"] = function()
+        return true
+      end
+      local rc = require("sandbox.bindings.usrcmds.registry_commands")
+
+      queue = { { value = "alice" }, { value = "hunter2" } }
+      rc.login()
+
+      assert.are.equal(case.says, notified[#notified].msg)
+    end)
+  end
+
+  it("a login with a registry names it, whatever the engine", function()
+    package.loaded["sandbox"].resolve_engine_name = function()
+      return "podman"
+    end
+    package.loaded["sandbox.core.usecases.registry.login"] = function()
+      return true
+    end
+    local rc = require("sandbox.bindings.usrcmds.registry_commands")
+
+    queue = { { value = "alice" }, { value = "hunter2" } }
+    rc.login("ghcr.io")
+
+    assert.are.equal("Logged in to ghcr.io", notified[#notified].msg)
+  end)
+
   it("the password field is asked with secret = true", function()
     package.loaded["sandbox.core.usecases.registry.login"] = function()
       return true

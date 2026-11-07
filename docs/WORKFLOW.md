@@ -65,10 +65,11 @@ nobody on the team has to remember to switch manually.
 
 ## `registry login` before the first `push`, per registry
 
-`image push` requires prior `registry login` for that registry — Podman
-additionally requires you name the registry explicitly (`:Sandbox registry
-login registry.example.com`), it has no implicit Docker Hub default the
-way Docker does. The password prompt (`vim.fn.inputsecret`, masked) pipes
+`image push` requires prior `registry login` for that registry — under Podman
+name the registry (`:Sandbox registry login registry.example.com`): without
+one it logs in to its registries.conf default (docker.io unless configured
+otherwise), not to Docker Hub the way Docker does, and the message says so.
+The password prompt (a masked `ui.kit` input) pipes
 straight to the engine over stdin, so it's safe to run this in a shared
 terminal recording without the password leaking into scrollback or shell
 history — but a login only lasts as long as the underlying engine's own

@@ -122,12 +122,13 @@ detected default.
 ## `:Sandbox registry <subcommand>` (alias: `:Sbx registry ...`)
 
 Authentication needed before `push`/`pull` against a private registry.
-`login` prompts for username (`vim.ui.input`) and password
-(`vim.fn.inputsecret`, masked); the password is piped to the engine via
+`login` prompts for username and password (`ui.kit` inputs, the password
+one with `secret = true`, masked); the password is piped to the engine via
 stdin (`--password-stdin`), never passed as an argv element, so it's never
-visible in the process list or shell history. Podman (unlike Docker)
-requires an explicit `registry` argument — it has no implicit Docker Hub
-default.
+visible in the process list or shell history. Without a `registry` argument
+each engine uses its own default and the message names it: Docker Hub for
+docker and nerdctl; for podman the registries.conf default (docker.io unless
+configured otherwise), not Docker Hub.
 
 | Subcommand | Args | Description |
 |---|---|---|

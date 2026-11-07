@@ -6,15 +6,33 @@
 --- rather than putting it in argv, where it would be visible in the
 --- process list or shell history.
 ---@description
---- Podman (unlike Docker) requires an explicit registry argument for
---- `podman login`/`podman logout` -- it has no implicit Docker Hub default.
+--- Without a registry argument each CLI uses its own default: Docker Hub for docker and nerdctl, for podman the
+--- registries.conf default (docker.io unless configured otherwise); the messages name that, not a blanket Docker Hub.
 
 local notify = require("sandbox.notify")
 local friendly_error = require("sandbox.util.friendly_error")
 local M = {}
 
+--- The registry a login or logout went to, as the user is told it. Without a `registry` argument each engine uses its
+--- own default: Docker Hub for docker and nerdctl; for podman the first of `unqualified-search-registries` in
+--- registries.conf, docker.io unless that file names another.
+---@param registry? string
+---@return string
+local function registry_label(registry)
+  if registry and registry ~= "" then
+    return registry
+  end
+  local ok, name = pcall(function()
+    return require("sandbox").resolve_engine_name()
+  end)
+  if ok and name == "podman" then
+    return "podman's default registry (docker.io unless registries.conf names another)"
+  end
+  return "Docker Hub"
+end
+
 --- Log in to a registry (prompts for username/password).
----@param registry? string defaults to Docker Hub on Docker; required on Podman
+---@param registry? string the engine's default registry when omitted
 function M.login(registry)
   local engine = require("sandbox").get_engine()
   if not engine then
@@ -47,7 +65,7 @@ function M.login(registry)
             return
           end
 
-          notify.info("Logged in to " .. ((registry and registry ~= "") and registry or "Docker Hub"))
+          notify.info("Logged in to " .. registry_label(registry))
         end,
         on_cancel = function()
           notify.warn("Login cancelled: no password given")
@@ -58,7 +76,7 @@ function M.login(registry)
 end
 
 --- Log out of a registry.
----@param registry? string defaults to Docker Hub on Docker; required on Podman
+---@param registry? string the engine's default registry when omitted
 function M.logout(registry)
   local engine = require("sandbox").get_engine()
   if not engine then
@@ -72,7 +90,7 @@ function M.logout(registry)
     return
   end
 
-  notify.info("Logged out of " .. ((registry and registry ~= "") and registry or "Docker Hub"))
+  notify.info("Logged out of " .. registry_label(registry))
 end
 
 return M
