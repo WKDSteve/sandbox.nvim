@@ -118,7 +118,13 @@ local steps = {
         for i = from, math.min(to, #_G.same) do
           local words = _G.same[i]
           local a, b = _G.argvs_of("Sandbox", words), _G.argvs_of("Sbx", words)
-          if not vim.deep_equal(a, b) then
+          -- `a` ends in the buffer and the toast: two equal failures would compare equal, so the route has to have
+          -- reached the engine. Three call none by design: `engine reset` drops the session override, `compose
+          -- services` reads the compose file, `devcontainer lazygit` hands over to gitsuite.nvim (absent here).
+          local no_call = { ["engine reset"] = true, ["compose services"] = true, ["devcontainer lazygit"] = true }
+          if #a < 3 and not no_call[words] then
+            _G.diff[#_G.diff + 1] = words .. ": no engine call through :Sandbox (" .. table.concat(a, "; ") .. ")"
+          elseif not vim.deep_equal(a, b) then
             _G.diff[#_G.diff + 1] = words .. ": " .. table.concat(a, "; ") .. " vs " .. table.concat(b, "; ")
           end
         end
