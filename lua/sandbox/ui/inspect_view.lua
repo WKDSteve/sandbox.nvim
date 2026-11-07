@@ -18,7 +18,7 @@ return function(data, container_id)
   local bufnr, winid = require("lib.nvim.window").open_named_scratch(
     "sandbox.nvim://inspect/" .. container_id,
     lines,
-    { filetype = "lua", split = list_opts.split, size = list_opts.size }
+    { filetype = "lua", split = list_opts.split, size = list_opts.size, modifiable = false }
   )
 
   vim.wo[winid].foldmethod = "indent"

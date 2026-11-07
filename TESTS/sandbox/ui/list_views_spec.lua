@@ -192,6 +192,16 @@ describe("ui list views", function()
         assert.are.equal(view.header + #view.items, #lines_of(bufnr))
       end)
 
+      -- The docs call these read-only scratch buffers; `open_named_scratch` leaves a buffer modifiable unless told
+      -- otherwise, and an `x` or `dd` typed by habit then edited the list the row keys read their item from.
+      it("is read-only, also after a second render", function()
+        local render = require(view.module)
+        render(view.items)
+        render(view.items)
+
+        assert.is_false(vim.bo[vim.api.nvim_get_current_buf()].modifiable)
+      end)
+
       it("acts on the item under the cursor, not on the line number", function()
         local render = require(view.module)
         render(view.items)
@@ -245,6 +255,13 @@ describe("ui list views", function()
     })
 
     assert.are.same({ "[running] web (0123456789ab)" }, lines_of(vim.api.nvim_get_current_buf()))
+  end)
+
+  it("the inspect and error views are read-only too", function()
+    require("sandbox.ui.inspect_view")({ Id = "abc" }, "abc")
+    assert.is_false(vim.bo[vim.api.nvim_get_current_buf()].modifiable)
+    require("sandbox.ui.error_view")({ "Failed to list containers:", "boom" })
+    assert.is_false(vim.bo[vim.api.nvim_get_current_buf()].modifiable)
   end)
 
   it("the container list fills in placeholders for whatever the engine omitted", function()

@@ -47,7 +47,7 @@ return function(images)
   local bufnr = require("lib.nvim.window").open_named_scratch(
     "sandbox.nvim://images",
     lines,
-    { filetype = "markdown", split = list_opts.split, size = list_opts.size }
+    { filetype = "markdown", split = list_opts.split, size = list_opts.size, modifiable = false }
   )
 
   local image_cmds = require("sandbox.bindings.usrcmds.image_commands")

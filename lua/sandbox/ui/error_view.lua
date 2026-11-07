@@ -5,6 +5,6 @@ return function(lines)
   require("lib.nvim.window").open_named_scratch(
     "sandbox.nvim://error-view",
     lines,
-    { filetype = "log", split = "below" }
+    { filetype = "log", split = "below", modifiable = false }
   )
 end

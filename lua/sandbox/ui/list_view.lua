@@ -36,7 +36,7 @@ return function(containers, all)
   local bufnr = require("lib.nvim.window").open_named_scratch(
     "sandbox.nvim://container-list",
     lines,
-    { filetype = "log", split = list_opts.split, size = list_opts.size }
+    { filetype = "log", split = list_opts.split, size = list_opts.size, modifiable = false }
   )
 
   -- `vim.hl` is the 0.11 rename of `vim.highlight`; README.md/installation.md

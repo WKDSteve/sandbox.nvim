@@ -26,7 +26,7 @@ return function(volumes)
   local bufnr = require("lib.nvim.window").open_named_scratch(
     "sandbox.nvim://volume-list",
     lines,
-    { filetype = "log", split = list_opts.split, size = list_opts.size }
+    { filetype = "log", split = list_opts.split, size = list_opts.size, modifiable = false }
   )
 
   local volume_cmds = require("sandbox.bindings.usrcmds.volume_commands")
