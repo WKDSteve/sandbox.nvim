@@ -11,8 +11,8 @@ return {
 
     { keys = ":Sandbox engine get<CR>" },
     {
-      wait = [[_G.noted("Active engine: podman (config)")]],
-      note = "detected: podman is preferred when installed; the source reads 'config'",
+      wait = [[_G.noted("Active engine: podman (detected)")]],
+      note = "detected: podman is preferred when installed, and the source says so",
     },
     { expect = [[_G.saw("podman version")]], note = "detection asked whether the engine answers" },
 

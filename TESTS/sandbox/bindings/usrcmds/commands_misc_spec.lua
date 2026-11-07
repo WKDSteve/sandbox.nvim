@@ -338,12 +338,29 @@ describe("usrcmds engine_commands", function()
     assert.is_truthy(notice_of(H, "info").msg:find(".sandboxrc", 1, true))
   end)
 
-  it("names the config as the source when nothing overrode it", function()
+  it("names the config as the source when setup named the engine", function()
     local H = load_engine_cmds()
+    local config = require("sandbox.config")
+    local saved = config.engine_named
+    config.engine_named = true
 
     H.mod.get()
+    config.engine_named = saved
 
-    assert.is_truthy(notice_of(H, "info").msg:find("(config)", 1, true))
+    assert.is_truthy(notice_of(H, "info").msg:find("(config)", 1, true), notice_of(H, "info").msg)
+  end)
+
+  -- A detected engine used to read "(config)" as well, which named a setting nobody had made.
+  it("names detection as the source when setup named no engine", function()
+    local H = load_engine_cmds()
+    local config = require("sandbox.config")
+    local saved = config.engine_named
+    config.engine_named = false
+
+    H.mod.get()
+    config.engine_named = saved
+
+    assert.is_truthy(notice_of(H, "info").msg:find("(detected)", 1, true), notice_of(H, "info").msg)
   end)
 
   -- ERR-10: an invalid .sandboxrc value must not be reported as if the file

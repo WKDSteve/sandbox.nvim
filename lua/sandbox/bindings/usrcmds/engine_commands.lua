@@ -64,7 +64,8 @@ end
 --- Show which engine is currently active and why.
 function M.get()
   local name = require("sandbox").resolve_engine_name()
-  local source = "config"
+  -- An engine named in `setup` is the config's; otherwise it was detected (the first installed engine that answers).
+  local source = require("sandbox.config").engine_named and "config" or "detected"
   local project_engine, project_invalid = require("sandbox.util.project_config").read_engine_override()
   if vim.g.sandbox_engine then
     source = "session override (:Sandbox engine set)"
@@ -74,7 +75,7 @@ function M.get()
     -- ERR-10: distinguish "the file has nothing to say" from "the file says
     -- something invalid, and it was ignored" -- the latter must not be
     -- reported as if it were the former.
-    source = "config (ignoring invalid 'engine=' in .sandboxrc)"
+    source = source .. " (ignoring invalid 'engine=' in .sandboxrc)"
   end
   notify.info("Active engine: " .. tostring(name) .. " (" .. source .. ")")
 end

@@ -62,7 +62,8 @@ installed where one project specifically needs the other.
 `:Sandbox engine set {docker|podman|nerdctl}` switches the active engine for
 the rest of the Neovim session without restarting or re-running `setup()`.
 `:Sandbox engine get` reports the currently active engine and why (session
-override vs. `.sandboxrc` vs. configured/detected default); `:Sandbox engine
+override, `.sandboxrc`, `(config)` for an engine named in `setup()`, `(detected)`
+otherwise); `:Sandbox engine
 reset` clears the session override, falling back to `.sandboxrc`/config.
 Precedence: session override > `.sandboxrc` > configured/detected default.
 - **Module:** `sandbox/bindings/usrcmds/engine_commands.lua`
