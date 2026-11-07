@@ -129,6 +129,35 @@ describe("list_actions.bulk_confirm_then", function()
     assert.is_true(require("sandbox.config").options.confirm_destructive)
   end)
 
+  it("applies nothing until a late answer, then once; a late no applies nothing", function()
+    require("sandbox.config").options.confirm_destructive = true
+
+    local answers = {}
+    require("lib.nvim.ui.dialog").yesno = function(_, _, cb)
+      answers[#answers + 1] = cb
+    end
+
+    local applied = {}
+    local function bulk()
+      list_actions.bulk_confirm_then("Remove", "widget", { { name = "a" }, { name = "b" } }, function(item)
+        return item.name
+      end, function(id)
+        applied[#applied + 1] = id
+      end)
+    end
+
+    bulk()
+    assert.are.same({}, applied, "nothing is applied before the answer")
+    assert.is_true(require("sandbox.config").options.confirm_destructive)
+    answers[1](true)
+    assert.are.same({ "a", "b" }, applied)
+    assert.is_true(require("sandbox.config").options.confirm_destructive, "restored after the late answer")
+
+    bulk()
+    answers[2](false)
+    assert.are.same({ "a", "b" }, applied, "a late no applies nothing")
+  end)
+
   it("skips the prompt entirely when confirm_destructive is false", function()
     require("sandbox.config").options.confirm_destructive = false
 
