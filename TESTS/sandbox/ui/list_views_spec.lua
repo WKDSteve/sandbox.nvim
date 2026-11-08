@@ -188,7 +188,7 @@ describe("ui list views", function()
         render(view.items)
 
         local bufnr = vim.api.nvim_get_current_buf()
-        assert.are.equal(view.buffer, vim.api.nvim_buf_get_name(bufnr))
+        assert.are.equal(view.buffer, require("TESTS.sandbox.helpers.buf_name").of(bufnr))
         assert.are.equal(view.header + #view.items, #lines_of(bufnr))
       end)
 

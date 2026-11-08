@@ -710,7 +710,10 @@ describe("usrcmds container_commands_buffer", function()
       buffer_cmds[case.fn](unpack(case.args, 1, 2))
 
       assert.are.same(case.argv, captured)
-      assert.are.equal("sandbox.nvim://" .. case.buf, vim.api.nvim_buf_get_name(vim.api.nvim_get_current_buf()))
+      assert.are.equal(
+        "sandbox.nvim://" .. case.buf,
+        require("TESTS.sandbox.helpers.buf_name").of(vim.api.nvim_get_current_buf())
+      )
     end)
   end
 
@@ -743,7 +746,7 @@ describe("usrcmds container_commands_buffer", function()
 
     local matching = 0
     for _, buf in ipairs(vim.api.nvim_list_bufs()) do
-      if vim.api.nvim_buf_get_name(buf) == "sandbox.nvim://term/start/abc123" then
+      if require("TESTS.sandbox.helpers.buf_name").of(buf) == "sandbox.nvim://term/start/abc123" then
         matching = matching + 1
       end
     end

@@ -47,9 +47,9 @@ describe("adapters.*.containers.exec_in_container, a second session", function()
       local third = vim.api.nvim_get_current_buf()
 
       assert.are.equal(3, started)
-      assert.are.equal("sandbox.nvim://exec/web", vim.api.nvim_buf_get_name(first))
-      assert.are.equal("sandbox.nvim://exec/web (2)", vim.api.nvim_buf_get_name(second))
-      assert.are.equal("sandbox.nvim://exec/web (3)", vim.api.nvim_buf_get_name(third))
+      assert.are.equal("sandbox.nvim://exec/web", require("TESTS.sandbox.helpers.buf_name").of(first))
+      assert.are.equal("sandbox.nvim://exec/web (2)", require("TESTS.sandbox.helpers.buf_name").of(second))
+      assert.are.equal("sandbox.nvim://exec/web (3)", require("TESTS.sandbox.helpers.buf_name").of(third))
     end)
   end
 end)

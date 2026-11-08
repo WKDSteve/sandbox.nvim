@@ -19,9 +19,12 @@ local M = {}
 
 ---@internal
 local function open_term_buffer(name, cmd)
-  -- Reuse an existing buffer with the same name if still valid
+  -- Reuse an existing buffer with the same name if still valid. Neovim before 0.12 makes a path of a name like
+  -- `sandbox.nvim://x` on Windows, so a buffer counts as well when its name is that path.
+  local full = vim.fn.fnamemodify(name, ":p")
   for _, buf in ipairs(vim.api.nvim_list_bufs()) do
-    if vim.api.nvim_buf_is_valid(buf) and vim.api.nvim_buf_get_name(buf) == name then
+    local existing = vim.api.nvim_buf_get_name(buf)
+    if vim.api.nvim_buf_is_valid(buf) and (existing == name or existing == full) then
       vim.api.nvim_buf_delete(buf, { force = true })
       break
     end

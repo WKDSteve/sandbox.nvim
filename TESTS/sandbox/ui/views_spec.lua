@@ -36,15 +36,23 @@ local function lines_of(bufnr)
   return vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
 end
 
+--- All buffers whose name is `name`.
+--- @param name string
+--- @return integer[]
+local function buffers_named(name)
+  local found = {}
+  for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+    if require("TESTS.sandbox.helpers.buf_name").of(buf) == name then
+      found[#found + 1] = buf
+    end
+  end
+  return found
+end
+
 --- @param name string
 --- @return integer|nil
 local function buffer_named(name)
-  for _, buf in ipairs(vim.api.nvim_list_bufs()) do
-    if vim.api.nvim_buf_get_name(buf) == name then
-      return buf
-    end
-  end
-  return nil
+  return buffers_named(name)[1]
 end
 
 describe("ui.log_view", function()
@@ -64,13 +72,7 @@ describe("ui.log_view", function()
     require("sandbox.ui.log_view")({ "first" }, "abc123")
     require("sandbox.ui.log_view")({ "second" }, "abc123")
 
-    local count = 0
-    for _, buf in ipairs(vim.api.nvim_list_bufs()) do
-      if vim.api.nvim_buf_get_name(buf) == "sandbox.nvim://logs/abc123" then
-        count = count + 1
-      end
-    end
-    assert.are.equal(1, count)
+    assert.are.equal(1, #buffers_named("sandbox.nvim://logs/abc123"))
     assert.are.same({ "second" }, lines_of(buffer_named("sandbox.nvim://logs/abc123")))
   end)
 

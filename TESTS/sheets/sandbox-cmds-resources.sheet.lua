@@ -54,7 +54,7 @@ local steps = {
   { lua = "vim.wait(200)" },
   {
     expect = [[_G.toasts() == _G.before + 2 and _G.noted("Pulling image alpine...") and vim.bo.buftype == ""
-      and vim.fn.winnr("$") == 1]],
+      and #vim.api.nvim_tabpage_list_wins(0) - #_G.floats() == 1]],
     note = "one start and one completion toast, no buffer, no window",
   },
   {

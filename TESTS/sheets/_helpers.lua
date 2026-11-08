@@ -369,21 +369,28 @@ function _G.text(buf)
   return table.concat(vim.api.nvim_buf_get_lines(buf or 0, 0, -1, false), "\n")
 end
 
----The buffer named `name` (exactly), or nil.
+---The buffer named `name` (exactly; on Neovim before 0.12 on Windows the path it makes of a `sandbox.nvim://x` name
+---counts), or nil.
 ---@param name string
 ---@return integer|nil
 function _G.buf(name)
   for _, b in ipairs(vim.api.nvim_list_bufs()) do
-    if vim.api.nvim_buf_is_valid(b) and vim.api.nvim_buf_get_name(b) == name then
-      return b
+    if vim.api.nvim_buf_is_valid(b) then
+      local got = vim.api.nvim_buf_get_name(b):gsub("\\", "/")
+      if got == name or (got ~= "" and vim.endswith(got, "/" .. name)) then
+        return b
+      end
     end
   end
 end
 
----The current buffer's name.
+---The current buffer's name. Neovim before 0.12 makes a path of `sandbox.nvim://x` on Windows
+---(`<cwd>\sandbox.nvim:\x`): the name is given back as the scratch buffers were named.
 ---@return string
 function _G.bufname()
-  return vim.api.nvim_buf_get_name(0)
+  local name = vim.api.nvim_buf_get_name(0):gsub("\\", "/")
+  local at = name:find("sandbox.nvim://", 1, true)
+  return at and name:sub(at) or vim.api.nvim_buf_get_name(0)
 end
 
 ---The floating windows of this tab.

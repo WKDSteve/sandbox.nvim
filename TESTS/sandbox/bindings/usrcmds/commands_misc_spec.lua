@@ -696,7 +696,7 @@ describe("usrcmds wsl_commands", function()
     H.mod.list()
 
     local buf = vim.api.nvim_get_current_buf()
-    assert.are.equal("sandbox.nvim://wsl-list", vim.api.nvim_buf_get_name(buf))
+    assert.are.equal("sandbox.nvim://wsl-list", require("TESTS.sandbox.helpers.buf_name").of(buf))
     local lines = vim.api.nvim_buf_get_lines(buf, 0, -1, false)
     assert.is_truthy(lines[1]:find("NAME", 1, true))
     assert.is_truthy(lines[3]:find("Ubuntu%-24%.04%s+Running%s+%*"))
@@ -710,7 +710,10 @@ describe("usrcmds wsl_commands", function()
     H.mod.list()
 
     assert.is_truthy(notice_of(H, "error").msg:find("Failed to list WSL distros", 1, true))
-    assert.are_not.equal("sandbox.nvim://wsl-list", vim.api.nvim_buf_get_name(vim.api.nvim_get_current_buf()))
+    assert.are_not.equal(
+      "sandbox.nvim://wsl-list",
+      require("TESTS.sandbox.helpers.buf_name").of(vim.api.nvim_get_current_buf())
+    )
   end)
 
   local HAPPY = {
