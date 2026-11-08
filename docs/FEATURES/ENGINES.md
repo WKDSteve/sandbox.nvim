@@ -6,6 +6,12 @@ binary directly, and one of three adapters (`adapters/docker`,
 `adapters/podman`, `adapters/nerdctl`) fulfills it for the currently active
 engine.
 
+The three adapters share one definition per verb: `adapters/cli/<group>/<verb>.lua` exports `new(bin)`, and the
+file of the same name in `adapters/<engine>/` is a one-line call of it with the engine's binary. An engine owns a
+file of its own only where its CLI really differs (today Podman: `stop`'s flag, the JSON of `ps` and `images`, and the
+terminal of `exec`); a new verb is written once in `cli/` and gets its three one-liners, and
+`shared_cli_spec.lua` fails on a copy that is neither delegating nor listed as an override.
+
 ## Automatic engine detection
 
 If no engine is configured, sandbox.nvim picks one itself: the first CLI on

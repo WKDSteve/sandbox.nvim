@@ -1,27 +1,4 @@
 ---@module 'sandbox.adapters.podman.containers.kill_container'
---- Podman Adapter: Function to kill a container
+--- Podman Adapter: shared with the other docker-CLI engines, see `sandbox.adapters.cli.containers.kill_container`
 
-local M = {}
-
---- Kill a specific container
---- @param container_id string: ID or name of the container to kill
---- @param on_done? fun(ok: boolean, err: string|nil)
-function M.kill_container(container_id, on_done)
-  local cmd = { "podman", "kill", container_id }
-
-  vim.fn.jobstart(cmd, {
-    on_exit = function(_, code, _)
-      vim.schedule(function()
-        if on_done then
-          if code == 0 then
-            on_done(true, nil)
-          else
-            on_done(false, "exit code " .. code)
-          end
-        end
-      end)
-    end,
-  })
-end
-
-return M
+return require("sandbox.adapters.cli.containers.kill_container").new("podman")

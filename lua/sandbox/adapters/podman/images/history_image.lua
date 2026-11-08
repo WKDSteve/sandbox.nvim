@@ -1,21 +1,4 @@
 ---@module 'sandbox.adapters.podman.images.history_image'
---- Podman Adapter: Function to show an image's layer history
+--- Podman Adapter: shared with the other docker-CLI engines, see `sandbox.adapters.cli.images.history_image`
 
-local run_argv = require("sandbox.util.run_argv")
-
-local M = {}
-
---- Show an image's layer history
---- @param image string: image ID or repository:tag
---- @return string[]|nil lines, string|nil err
-function M.history_image(image)
-  local ok, output = run_argv.run_blocking_captured({ "podman", "history", image })
-
-  if not ok then
-    return nil, output
-  end
-
-  return vim.split(output, "\n", { plain = true }), nil
-end
-
-return M
+return require("sandbox.adapters.cli.images.history_image").new("podman")

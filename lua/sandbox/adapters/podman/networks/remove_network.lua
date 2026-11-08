@@ -1,27 +1,4 @@
 ---@module 'sandbox.adapters.podman.networks.remove_network'
---- Podman Adapter: Function to remove a network
+--- Podman Adapter: shared with the other docker-CLI engines, see `sandbox.adapters.cli.networks.remove_network`
 
-local M = {}
-
---- Remove a specific network by name
---- @param name string
---- @param on_done? fun(ok: boolean, err: string|nil)
-function M.remove_network(name, on_done)
-  local cmd = { "podman", "network", "rm", name }
-
-  vim.fn.jobstart(cmd, {
-    on_exit = function(_, code, _)
-      vim.schedule(function()
-        if on_done then
-          if code == 0 then
-            on_done(true, nil)
-          else
-            on_done(false, "exit code " .. code)
-          end
-        end
-      end)
-    end,
-  })
-end
-
-return M
+return require("sandbox.adapters.cli.networks.remove_network").new("podman")

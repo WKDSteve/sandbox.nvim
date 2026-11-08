@@ -1,14 +1,4 @@
 ---@module 'sandbox.adapters.docker.registry_engine'
---- Docker Registry Adapter
----
---- Implements registry authentication (login/logout) operations of the
---- ContainerEngine port for Docker.
+--- Docker Adapter aggregate: shared, see `sandbox.adapters.cli.registry_engine`
 
-local login = require("sandbox.adapters.docker.registry.login")
-local logout = require("sandbox.adapters.docker.registry.logout")
-
---- Registry operations exposed by the Docker adapter
-return {
-  login_registry = login.login,
-  logout_registry = logout.logout,
-}
+return require("sandbox.adapters.cli.registry_engine").new("docker")

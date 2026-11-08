@@ -1,14 +1,4 @@
 ---@module 'sandbox.adapters.nerdctl.registry_engine'
---- Nerdctl Registry Adapter
----
---- Implements registry authentication (login/logout) operations of the
---- ContainerEngine port for Nerdctl.
+--- Nerdctl Adapter aggregate: shared, see `sandbox.adapters.cli.registry_engine`
 
-local login = require("sandbox.adapters.nerdctl.registry.login")
-local logout = require("sandbox.adapters.nerdctl.registry.logout")
-
---- Registry operations exposed by the Nerdctl adapter
-return {
-  login_registry = login.login,
-  logout_registry = logout.logout,
-}
+return require("sandbox.adapters.cli.registry_engine").new("nerdctl")

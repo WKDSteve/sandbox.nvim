@@ -1,30 +1,4 @@
 ---@module 'sandbox.adapters.docker.images_engine'
---- Docker Image Adapter Aggregator
----
---- Combines all image operations into a unified interface
---- for the ContainerEngine port (specific to Docker).
+--- Docker Adapter aggregate: shared, see `sandbox.adapters.cli.images_engine`
 
-local list_images = require("sandbox.adapters.docker.images.list_images")
-local pull_image = require("sandbox.adapters.docker.images.pull_image")
-local push_image = require("sandbox.adapters.docker.images.push_image")
-local remove_image = require("sandbox.adapters.docker.images.remove_image")
-local prune_images = require("sandbox.adapters.docker.images.prune_images")
-local tag_image = require("sandbox.adapters.docker.images.tag_image")
-local save_image = require("sandbox.adapters.docker.images.save_image")
-local load_image = require("sandbox.adapters.docker.images.load_image")
-local history_image = require("sandbox.adapters.docker.images.history_image")
-local inspect_image = require("sandbox.adapters.docker.images.inspect_image")
-
---- Image operations exposed by the Docker adapter
-return {
-  list_images = list_images.list_images,
-  pull_image = pull_image.pull_image,
-  push_image = push_image.push_image,
-  remove_image = remove_image.remove_image,
-  prune_images = prune_images.prune_images,
-  tag_image = tag_image.tag_image,
-  save_image = save_image.save_image,
-  load_image = load_image.load_image,
-  history_image = history_image.history_image,
-  inspect_image = inspect_image.inspect_image,
-}
+return require("sandbox.adapters.cli.images_engine").new("docker")

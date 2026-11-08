@@ -1,0 +1,101 @@
+---@module 'sandbox.adapters.cli.containers.follow_logs'
+--- CLI Adapter (docker, podman, nerdctl): Stream a container's logs live (`docker logs -f <id>`)
+---
+--- One definition for every engine that speaks the docker CLI: `new(bin)` returns the functions for
+--- the binary `bin`. The per-engine module of the same name calls it (`sandbox.adapters.<engine>.containers.follow_logs`).
+
+local Shared = {}
+
+--- @param bin string the engine's binary (`docker`, `podman`, `nerdctl`)
+--- @return table the functions of this module
+function Shared.new(bin)
+  local lines = require("lib.nvim.system.lines")
+
+  local M = {}
+
+  --- Stream logs for a container until stopped or the process exits.
+  --- @param container_id string
+  --- @param on_line fun(line: string)
+  --- @param on_exit? fun(code: integer|nil)
+  --- @return table handle with a `:stop()` method
+  function M.follow_logs(container_id, on_line, on_exit)
+    -- stdout and stderr are two independent byte streams; `vim.system` invokes
+    -- their callbacks separately as each pipe has data, in whatever order the
+    -- OS delivers them. A single shared buffer here would splice a stdout
+    -- chunk that has not seen its newline yet with an unrelated stderr chunk
+    -- that arrives first -- e.g. stdout emits "foo" (no newline), then stderr
+    -- emits "bar\n": a shared buffer turns that into one line "foobar" that
+    -- never existed in either stream. Each stream gets its own trailing-partial
+    -- buffer so a line is only ever completed by more of the *same* stream.
+    local stdout_buf = lines.collector()
+    local stderr_buf = lines.collector()
+
+    local function make_on_output(stream_buf)
+      return function(_, data)
+        if not data then
+          return
+        end
+        local chunks = stream_buf.feed(data)
+        if #chunks > 0 then
+          vim.schedule(function()
+            for _, line in ipairs(chunks) do
+              on_line(line)
+            end
+          end)
+        end
+      end
+    end
+
+    local spawn_ok, job = pcall(
+      vim.system,
+      { bin, "logs", "-f", container_id },
+      { stdout = make_on_output(stdout_buf), stderr = make_on_output(stderr_buf) },
+      function(obj)
+        local leftover_out = stdout_buf.flush()
+        local leftover_err = stderr_buf.flush()
+        if leftover_out or leftover_err then
+          vim.schedule(function()
+            if leftover_out then
+              on_line(leftover_out)
+            end
+            if leftover_err then
+              on_line(leftover_err)
+            end
+          end)
+        end
+        if on_exit then
+          vim.schedule(function()
+            on_exit(obj.code)
+          end)
+        end
+      end
+    )
+
+    if not spawn_ok then
+      -- `vim.system` throws synchronously (uv.spawn ENOENT and friends)
+      -- instead of reporting a failed spawn through the exit callback --
+      -- without this, the caller's `handle` assignment never completes, so it
+      -- never binds `q` or the BufWipeout kill-handler on the buffer it
+      -- already opened.
+      vim.schedule(function()
+        on_line("-- failed to start log stream: " .. tostring(job) .. " --")
+        if on_exit then
+          on_exit(nil)
+        end
+      end)
+      return {
+        stop = function() end,
+      }
+    end
+
+    return {
+      stop = function()
+        job:kill("sigterm")
+      end,
+    }
+  end
+
+  return M
+end
+
+return Shared
