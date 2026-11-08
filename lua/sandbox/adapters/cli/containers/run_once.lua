@@ -2,7 +2,8 @@
 --- CLI Adapter (docker, podman, nerdctl): run a container once, attached (output, exit code, --rm)
 ---
 --- One definition for every engine that speaks the docker CLI: `new(bin)` returns the functions for
---- the binary `bin`. The per-engine module of the same name calls it (`sandbox.adapters.<engine>.containers.run_once`).
+--- the binary `bin`. The per-engine module of the same name calls it
+--- (`sandbox.adapters.<engine>.<group>.<verb>`).
 
 local Shared = {}
 

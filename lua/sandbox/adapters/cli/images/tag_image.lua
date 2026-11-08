@@ -2,7 +2,8 @@
 --- CLI Adapter (docker, podman, nerdctl): Function to tag a local image
 ---
 --- One definition for every engine that speaks the docker CLI: `new(bin)` returns the functions for
---- the binary `bin`. The per-engine module of the same name calls it (`sandbox.adapters.<engine>.images.tag_image`).
+--- the binary `bin`. The per-engine module of the same name calls it
+--- (`sandbox.adapters.<engine>.<group>.<verb>`).
 
 local Shared = {}
 

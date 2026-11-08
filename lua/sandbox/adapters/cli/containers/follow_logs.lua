@@ -2,7 +2,8 @@
 --- CLI Adapter (docker, podman, nerdctl): Stream a container's logs live (`docker logs -f <id>`)
 ---
 --- One definition for every engine that speaks the docker CLI: `new(bin)` returns the functions for
---- the binary `bin`. The per-engine module of the same name calls it (`sandbox.adapters.<engine>.containers.follow_logs`).
+--- the binary `bin`. The per-engine module of the same name calls it
+--- (`sandbox.adapters.<engine>.<group>.<verb>`).
 
 local Shared = {}
 
