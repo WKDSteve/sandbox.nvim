@@ -105,6 +105,8 @@ return {
       layout = "hosted",
       -- the steps that depend on the platform: the windows and macOS legs run only these
       platform = { "suite", "conformance" },
+      -- `testing ci land`: a check branch ci/** runs the hosted legs, main moves only once it is green there
+      land = true,
       -- more checkouts below .deps/, not on the runtimepath of the specs
       checkouts = {
         {
