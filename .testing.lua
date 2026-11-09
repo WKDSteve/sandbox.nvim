@@ -96,4 +96,26 @@ return {
       },
     },
   },
+  -- The pipeline is derived (`scripts/test.sh ci list`). The GitHub workflow is generated from `workflow`:
+  -- `testing init --workflow=public --force` writes it (testing.nvim docs/WORKFLOW-CI.md), the step
+  -- workflow-in-sync checks it.
+  ci = {
+    workflow = {
+      name = "sandbox.nvim",
+      layout = "hosted",
+      -- the steps that depend on the platform: the windows and macOS legs run only these
+      platform = { "suite", "conformance" },
+      -- more checkouts below .deps/, not on the runtimepath of the specs
+      checkouts = {
+        {
+          repo = "WKDSteve/hover.nvim",
+          ref = "ci-verified",
+          why = "TESTS/minimal_init.lua requires it; only the test sheet of the hover preview loads it.",
+        },
+      },
+    },
+    steps = {
+      ["workflow-in-sync"] = { preset = "workflow-in-sync" },
+    },
+  },
 }

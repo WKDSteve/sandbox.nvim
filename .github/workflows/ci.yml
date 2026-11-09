@@ -1,3 +1,18 @@
+# CI of sandbox.nvim: one pipeline, GitHub-hosted runners only.
+#
+# What is checked lives only in the `ci` section of .testing.lua; every leg runs it with `scripts/test.sh ci`, exactly
+# as the pre-push hook and `:Testing ci` do. This file only prepares the machine.
+#
+# - every event (a push to main, a pull request, also from a fork): GitHub-hosted runners only, a throwaway VM with a
+#   read-only token and no secrets; nothing runs on the maintainer's machine. The whole profile runs on ubuntu, the
+#   steps that depend on the platform (the suite and conformance) on windows and macOS. The legs pin nvim 0.12.2, stylua
+#   2.5.2, luacheck 1.2.0.
+# - the result cache (docs/CI-CACHE.md of testing.nvim): the suite reuses the green results of earlier runs; a pull
+#   request only restores it, only a push to main saves it.
+#
+# A fork can edit this file in its pull request (e.g. `runs-on: self-hosted`). The repository therefore requires
+# approval before a workflow of an outside contributor runs; never approve a pull request that touches `.github/`.
+
 name: CI
 
 on:
@@ -5,135 +20,116 @@ on:
     branches: [main]
   pull_request:
 
-jobs:
-  lint:
-    name: stylua + luacheck
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    steps:
-      - uses: actions/checkout@v5
+permissions:
+  contents: read
 
-      - name: stylua (check)
-        uses: JohnnyMorganz/stylua-action@v5
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  pipeline:
+    name: testing ci (${{ matrix.name }})
+    runs-on: ${{ matrix.runs-on }}
+    timeout-minutes: 30
+    strategy:
+      # One platform failing must not cancel the other.
+      fail-fast: false
+      matrix:
+        # Every event gets hosted runners: the whole profile on ubuntu, and on windows and macOS the steps that depend
+        # on the platform (stylua and luacheck do not).
+        include: ${{ fromJSON('[{"name":"ubuntu","runs-on":"ubuntu-latest","hosted":true,"steps":""},{"name":"windows","runs-on":"windows-latest","hosted":true,"steps":"--step=suite,conformance"},{"name":"macos","runs-on":"macos-latest","hosted":true,"steps":"--step=suite,conformance"}]') }}
+    defaults:
+      run:
+        # One shell on every runner: `bash` is the WSL launcher on the self-hosted machine, pwsh is everywhere.
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+      # Found by scripts/test.sh in `.deps/<name>`. lib.nvim, ui.nvim and testing.nvim come from the branch that
+      # only moves once the dependency's own CI is green.
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+          repository: WKDSteve/lib.nvim
+          path: .deps/lib.nvim
+          ref: ci-verified
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+          repository: WKDSteve/ui.nvim
+          path: .deps/ui.nvim
+          ref: ci-verified
+      # TESTS/minimal_init.lua requires it; only the test sheet of the hover preview loads it.
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+          repository: WKDSteve/hover.nvim
+          path: .deps/hover.nvim
+          ref: ci-verified
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+          repository: WKDSteve/testing.nvim
+          path: .deps/testing.nvim
+          ref: ci-verified
+      # The tools every leg needs, at the versions of the table in testing.nvim (testing.ci.workflow).
+      - uses: rhysd/action-setup-vim@febef33995d6649302e9d88dda81e071b68f16a7 # v1
+        if: matrix.hosted
+        with:
+          neovim: true
+          version: v0.12.2
+      # The action installs stylua on PATH; `--version` only proves it is there, the check itself is the pipeline's.
+      - uses: JohnnyMorganz/stylua-action@76fd70c03e6340ceaf673366712db9b20560b402 # v5
+        if: matrix.hosted && matrix.steps == ''
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           version: v2.5.2
-          args: --check .
-
-      - uses: leafo/gh-actions-lua@v13
+          args: --version
+      # PUC Lua, not "luajit-2.1" (that tarball 404s); `std = "luajit"` in .luacheckrc decides what is checked against.
+      - uses: leafo/gh-actions-lua@6919171ccf181b826f44b9bca76307b577217377 # v13
+        if: matrix.hosted && matrix.steps == ''
         with:
-          # luacheck 1.2.0 fails to load under Lua 5.5 (gh-actions-lua's
-          # default): "attempt to assign to const variable 'field_name'" in
-          # luacheck/standards.lua. 5.1 also matches this repo's own
-          # .luacheckrc (std = "lua51").
-          luaVersion: "5.1"
-      - uses: leafo/gh-actions-luarocks@v6
-
-      - name: Install luacheck
+          luaVersion: "5.4"
+      - uses: leafo/gh-actions-luarocks@35d062def313a7699a0d513e996bcf4352f05389 # v6
+        if: matrix.hosted && matrix.steps == ''
+      - if: matrix.hosted && matrix.steps == ''
         run: luarocks install luacheck 1.2.0
-
-      - name: Run luacheck
-        run: luacheck lua TESTS
-
-  test:
-    name: tests (${{ matrix.os }})
-    runs-on: ${{ matrix.os }}
-    timeout-minutes: 15
-    strategy:
-      # One platform failing must not cancel the others: which of the three
-      # broke is the whole information content of this job.
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
-    defaults:
-      run:
-        # Windows runners default to PowerShell; one shell on all three keeps
-        # the run step itself from being what differs between platforms.
-        shell: bash
-    steps:
-      - uses: actions/checkout@v5
+      # The result cache (docs/CI-CACHE.md of testing.nvim). The key is only the transport: every entry carries its
+      # own full spec key and is checked against it when read, so a wrong restore can lower the hit rate and never turn
+      # a result green. A pull request only restores; only a push to main saves.
+      - uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
-          path: sandbox.nvim
-
-      - uses: actions/checkout@v5
-        with:
-          repository: WKDSteve/lib.nvim
-          path: lib.nvim
-          ref: ci-verified
-
-      - uses: actions/checkout@v5
-        with:
-          repository: WKDSteve/ui.nvim
-          path: ui.nvim
-          ref: ci-verified
-
-      # hover.nvim: TESTS/minimal_init.lua requires it (a missing one is fatal); only the test sheet of the hover
-      # preview puts it on its runtimepath (TESTS/sheets/sandbox-hover.sheet.lua), so it runs here, not skips.
-      - uses: actions/checkout@v5
-        with:
-          repository: WKDSteve/hover.nvim
-          path: hover.nvim
-          ref: ci-verified
-
-      - uses: rhysd/action-setup-vim@v1
-        with:
-          neovim: true
-
-      # Checked out from the branch that only moves once the dependency's own CI is green.
-      - uses: actions/checkout@v5
-        with:
-          repository: "WKDSteve/testing.nvim"
-          path: testing.nvim
-          ref: ci-verified
-      - name: Run test suite (testing.nvim)
-        working-directory: sandbox.nvim
+          path: ${{ runner.temp }}/testing-cache
+          key: testing-${{ runner.os }}-nvim0.12.2-${{ github.sha }}
+          restore-keys: testing-${{ runner.os }}-nvim0.12.2-
+      - name: scripts/test.sh ci ${{ matrix.steps }}
         env:
-          LIB_NVIM_DIR: ${{ github.workspace }}/lib.nvim
-          UI_NVIM_DIR: ${{ github.workspace }}/ui.nvim
-          TESTING_NVIM_DIR: ${{ github.workspace }}/testing.nvim
+          TESTING_CACHE_HOME: ${{ runner.temp }}/testing-cache
+          CI_STEPS: ${{ matrix.steps }}
+          CI_REPORT: ${{ runner.temp }}/ci-report.json
+          CI_IR: ${{ runner.temp }}/suite-ir.json
         run: |
-          exec > >(tee -a "$RUNNER_TEMP/test-output.log") 2>&1
-          bash scripts/test.sh --json "$RUNNER_TEMP/testing-ir.json"
-      - name: Conformance gate
-        working-directory: sandbox.nvim
-        env:
-          LIB_NVIM_DIR: ${{ github.workspace }}/lib.nvim
-          UI_NVIM_DIR: ${{ github.workspace }}/ui.nvim
-          TESTING_NVIM_DIR: ${{ github.workspace }}/testing.nvim
-        run: bash scripts/test.sh conformance
-      # The IR of the Linux run carries the surface the specs exercised: the baseline (surface.baseline.json) is
-      # written from exactly this artifact, so it matches what the runner measures.
-      - uses: actions/upload-artifact@v7
-        if: matrix.os == 'ubuntu-latest' && always()
+          nvim --version | Select-Object -First 1
+          # Git Bash on Windows (never the WSL launcher), bash elsewhere; scripts/test.sh is a bash script.
+          $bash = if ($IsWindows) { Join-Path $env:ProgramFiles 'Git\bin\bash.exe' } else { 'bash' }
+          $steps = @($env:CI_STEPS -split ' ' | Where-Object { $_ })
+          & $bash scripts/test.sh ci @steps --keep-going --no-agent "--json=$env:CI_REPORT" -- "--json=$env:CI_IR" --cached
+          exit $LASTEXITCODE
+      - uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        if: success() && github.event_name == 'push' && github.ref == 'refs/heads/main'
         with:
-          name: surface-ir
-          path: ${{ runner.temp }}/testing-ir.json
-          if-no-files-found: ignore
-          retention-days: 7
-      # Regression gate for the surface (docs/SURFACE.md of testing.nvim): a command, keymap or autocommand that the specs
-      # exercised when surface.baseline.json was written must still be exercised. Linux only: the baseline comes from
-      # the Linux run. To accept an intended change, rewrite the file from a green Linux run (`scripts/test.sh surface
-      # --from <ir> --write-baseline surface.baseline.json`, IR = the surface-ir artifact) and review the diff.
-      - name: Surface baseline gate
-        if: matrix.os == 'ubuntu-latest'
-        working-directory: sandbox.nvim
-        env:
-          LIB_NVIM_DIR: ${{ github.workspace }}/lib.nvim
-          UI_NVIM_DIR: ${{ github.workspace }}/ui.nvim
-          TESTING_NVIM_DIR: ${{ github.workspace }}/testing.nvim
-        run: bash scripts/test.sh surface --from "$RUNNER_TEMP/testing-ir.json" --baseline surface.baseline.json --require-signed-baseline
-      # The IR is what a reporter or a person reads to find out WHICH case failed on WHICH platform.
-      - uses: actions/upload-artifact@v7
+          path: ${{ runner.temp }}/testing-cache
+          key: testing-${{ runner.os }}-nvim0.12.2-${{ github.sha }}
+      # The report names every step and, for a red one, its findings or last output lines; the suite IR (everything
+      # after `--` goes to the suite step) names the failing case and its assertions.
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         if: failure()
         with:
-          name: testing-ir-${{ matrix.os }}
-          path: ${{ runner.temp }}/testing-ir.json
-          if-no-files-found: ignore
-          retention-days: 14
-      - uses: actions/upload-artifact@v7
-        if: failure()
-        with:
-          name: test-output-test-${{ matrix.os }}
-          path: ${{ runner.temp }}/test-output.log
+          name: ci-${{ matrix.name }}
+          path: |
+            ${{ runner.temp }}/ci-report.json
+            ${{ runner.temp }}/suite-ir.json
           if-no-files-found: ignore
           retention-days: 14
