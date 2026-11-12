@@ -121,15 +121,16 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           version: v2.5.2
           args: --version
-      # PUC Lua, not "luajit-2.1" (that tarball 404s); `std = "luajit"` in .luacheckrc decides what is checked against.
-      - uses: leafo/gh-actions-lua@6919171ccf181b826f44b9bca76307b577217377 # v13
-        if: matrix.hosted && matrix.steps == ''
-        with:
-          luaVersion: "5.4"
-      - uses: leafo/gh-actions-luarocks@35d062def313a7699a0d513e996bcf4352f05389 # v6
-        if: matrix.hosted && matrix.steps == ''
+      # luacheck as the release binary of lunarmodules, its sha256 pinned (checked against the maintainer's signature;
+      # the file scripts/wsl-tools.sh of testing.nvim installs): no Lua from www.lua.org, whose download timed out.
+      # `std = "luajit"` in .luacheckrc decides what is checked against.
       - if: matrix.hosted && matrix.steps == ''
-        run: luarocks install luacheck 1.2.0
+        shell: bash
+        run: |
+          curl -fsSL -o "$RUNNER_TEMP/luacheck" "https://github.com/lunarmodules/luacheck/releases/download/v1.2.0/luacheck"
+          echo "d68da17fca0697d9e2fb04201f3884abd259fa558b3a449bccaed47f1390defc  $RUNNER_TEMP/luacheck" | sha256sum -c -
+          install -D -m 755 "$RUNNER_TEMP/luacheck" "$HOME/.local/bin/luacheck"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
       # The result cache (docs/CI-CACHE.md of testing.nvim). The key is only the transport: every entry carries its
       # own full spec key and is checked against it when read, so a wrong restore can lower the hit rate and never turn
       # a result green. A pull request only restores; only a push to main saves.
