@@ -67,7 +67,7 @@ for _, name in ipairs(DEPS) do
   end
   if hit then
     found[name] = hit
-  else
+  elseif not SHEETS_ONLY[name] then
     local lines = { ("error: dependency '%s' not found. Searched, in this order:"):format(name) }
     for i, p in ipairs(places) do
       lines[#lines + 1] = ("  %d. %s (%s)"):format(i, p[1], p[2] or "unset")
