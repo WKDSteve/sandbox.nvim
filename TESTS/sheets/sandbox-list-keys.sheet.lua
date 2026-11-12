@@ -3,6 +3,7 @@
 -- reach the engine with the id of the row under the cursor; nothing is started.
 return {
   id = "sandbox.list-keys",
+  feature = "sandbox.container-list",
   title = "sandbox.nvim: container list rows, status colors, and every row key acting on the row under the cursor",
   task = "sandbox.nvim/manual-checklist-run",
   sizes = { { rows = 40, cols = 140 } },

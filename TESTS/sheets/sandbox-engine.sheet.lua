@@ -3,6 +3,7 @@
 -- installed, nothing is started.
 return {
   id = "sandbox.engine",
+  feature = "sandbox.engine",
   title = "sandbox.nvim: engine get/set/reset, .sandboxrc precedence, E cycles and re-renders the list",
   task = "sandbox.nvim/manual-checklist-run",
   sizes = { { rows = 30, cols = 120 } },

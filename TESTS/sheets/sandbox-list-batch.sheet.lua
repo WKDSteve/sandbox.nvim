@@ -3,6 +3,7 @@
 -- (TESTS/sheets/_helpers.lua): nothing is started or removed.
 return {
   id = "sandbox.list-batch",
+  feature = "sandbox.list-refresh",
   title = "sandbox.nvim: refresh_interval re-renders while shown and stops when hidden or wiped; one confirmation "
     .. "per batch, naming its items",
   task = "sandbox.nvim/manual-checklist-run",

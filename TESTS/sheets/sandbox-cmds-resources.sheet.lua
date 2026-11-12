@@ -163,6 +163,7 @@ end
 
 return {
   id = "sandbox.cmds-resources",
+  feature = "sandbox.resources",
   title = "sandbox.nvim: every :Sandbox image, volume, network and registry command reaches the engine with "
     .. "the argv it names; the list keys",
   task = "sandbox.nvim/manual-checklist-run",

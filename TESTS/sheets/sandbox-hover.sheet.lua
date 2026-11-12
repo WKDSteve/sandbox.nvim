@@ -4,6 +4,7 @@
 -- pulled, `nginx:1.27-alpine` is not, one container runs from `alpine:edge`.
 return {
   id = "sandbox.hover",
+  feature = "sandbox.hover",
   title = "sandbox.nvim: :Hover show on an image reference says pulled or not pulled; never automatic",
   task = "sandbox.nvim/manual-checklist-run",
   sizes = { { rows = 40, cols = 140 } },

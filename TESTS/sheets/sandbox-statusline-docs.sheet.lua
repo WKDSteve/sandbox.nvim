@@ -4,6 +4,7 @@
 -- the repository's own docs/GENERATED_COMMANDS.md is never touched.
 return {
   id = "sandbox.statusline-docs",
+  feature = "sandbox.statusline",
   title = "sandbox.nvim: statusline 'engine (running/total)', cached for the TTL; docs generate and BINDINGS.md",
   task = "sandbox.nvim/manual-checklist-run",
   sizes = { { rows = 30, cols = 120 } },

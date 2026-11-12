@@ -99,6 +99,7 @@ end
 
 return {
   id = "sandbox.cmds-container",
+  feature = "sandbox.container-commands",
   title = "sandbox.nvim: every :Sandbox container command reaches the engine with the argv it names",
   task = "sandbox.nvim/manual-checklist-run",
   sizes = { { rows = 40, cols = 160 } },

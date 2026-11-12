@@ -3,6 +3,7 @@
 -- projects in temp directories. Fake engine CLIs (TESTS/sheets/_helpers.lua): nothing is pulled or started.
 return {
   id = "sandbox.compose-devcontainer",
+  feature = "sandbox.compose",
   title = "sandbox.nvim: compose up/down/restart/ps/logs/services from the cwd, devcontainer build/attach/lazygit",
   task = "sandbox.nvim/manual-checklist-run",
   sizes = { { rows = 40, cols = 160 } },
