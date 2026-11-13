@@ -113,8 +113,8 @@ a *no* is remembered for the session, which is what `:Sandbox engine reset` is
 for — the probe timeout, and a probe that raises), `util/friendly_error_spec.lua`
 (every known pattern, the first-line fallback, the cap and where it says the
 rest is), `statusline_spec.lua` (cache TTL, stale-while-revalidate, the
-in-flight guard, every degradation path), `notify_spec.lua` (both halves, with
-and without lib.nvim), `health_spec.lua` (every branch against a recorded
+in-flight guard, every degradation path), `notify_spec.lua` (both halves, and the
+loud failure without lib.nvim), `health_spec.lua` (every branch against a recorded
 `vim.health`), `util/compose_find_spec.lua` (the upward search, all six
 filenames, nearest-wins).
 

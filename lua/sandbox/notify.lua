@@ -1,6 +1,5 @@
 ---@module 'sandbox.notify'
---- Notify wrapper: uses lib.nvim's notify factory when lib.nvim is installed,
---- falls back to plain vim.notify otherwise (lib.nvim stays an optional dependency).
+--- Notify wrapper on lib.nvim's notify factory (lib.nvim is a hard dependency).
 ---
 --- warn/error additionally forward to sandbox.logger for structured
 --- diagnostics (raw CLI output, exit codes, ...) via an optional `ctx` table,
@@ -9,20 +8,7 @@
 
 local logger = require("sandbox.logger")
 
-local ok, lib_notify = pcall(require, "lib.nvim.notify")
-
-local base = ok and lib_notify.create("[sandbox.nvim]", { popup = true, source = "sandbox" })
-  or {
-    info = function(msg)
-      vim.notify("[sandbox.nvim] " .. msg, vim.log.levels.INFO)
-    end,
-    warn = function(msg)
-      vim.notify("[sandbox.nvim] " .. msg, vim.log.levels.WARN)
-    end,
-    error = function(msg)
-      vim.notify("[sandbox.nvim] " .. msg, vim.log.levels.ERROR)
-    end,
-  }
+local base = require("lib.nvim.notify").create("[sandbox.nvim]", { popup = true, source = "sandbox" })
 
 local M = {}
 

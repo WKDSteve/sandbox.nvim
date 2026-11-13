@@ -86,21 +86,8 @@ describe("sandbox.util.friendly_error", function()
 
       assert.are.equal(string.rep("x", 20), out:sub(1, 20))
       assert.is_truthy(out:find("full text:", 1, true))
-      -- lib.nvim is present in this suite, so the hint may name its viewer.
-      assert.is_truthy(out:find(":LibLogger show", 1, true) or out:find("raise max_error_length", 1, true))
-    end)
-
-    it("points at raising the cap when lib.nvim's logger is not installed", function()
-      local friendly_error = fresh(10)
-      package.loaded["lib.nvim.logger"] = nil
-      package.preload["lib.nvim.logger"] = function()
-        error("module 'lib.nvim.logger' not found")
-      end
-
-      local out = friendly_error(string.rep("y", 50))
-
-      package.preload["lib.nvim.logger"] = nil
-      assert.is_truthy(out:find("raise max_error_length", 1, true))
+      -- lib.nvim is a hard dependency: sandbox.logger recorded the raw text, its viewer shows it.
+      assert.is_truthy(out:find(":LibLogger show", 1, true))
     end)
 
     it("does not touch a line that fits", function()

@@ -1,10 +1,9 @@
 -- `notify` and `logger` are the two halves of one decision: the user sees one
 -- short line, the diagnostic context goes somewhere it can be read later.
 --
--- Both are built at load time from an optional `lib.nvim` (that is the point of
--- the `pcall(require, ...)` at the top of each), so both worlds are exercised
--- here by loading the module with lib.nvim present and again with it made to
--- look absent via `package.preload`.
+-- Both are built at load time from lib.nvim, a hard dependency (LUA-01): with it
+-- they route through lib.nvim's factories; made to look absent via
+-- `package.preload`, loading them fails loudly instead of degrading silently.
 ---@diagnostic disable: need-check-nil
 
 describe("sandbox.logger", function()
@@ -38,21 +37,17 @@ describe("sandbox.logger", function()
     assert.are.equal("off", created_with.notify_level)
   end)
 
-  it("degrades to a no-op with all five levels when lib.nvim is absent", function()
+  it("fails loudly, naming the module, when lib.nvim is absent", function()
     package.loaded["lib.nvim.logger"] = nil
     package.preload["lib.nvim.logger"] = function()
       error("module 'lib.nvim.logger' not found")
     end
     package.loaded["sandbox.logger"] = nil
 
-    local logger = require("sandbox.logger")
+    local ok, err = pcall(require, "sandbox.logger")
 
-    for _, level in ipairs({ "trace", "debug", "info", "warn", "error" }) do
-      assert.is_function(logger[level], level)
-      assert.has_no.errors(function()
-        logger[level]("message", { some = "context" })
-      end)
-    end
+    assert.is_false(ok)
+    assert.is_truthy(tostring(err):find("lib.nvim.logger", 1, true))
   end)
 end)
 
@@ -141,28 +136,10 @@ describe("sandbox.notify", function()
     assert.are.same({}, logged)
   end)
 
-  it("falls back to vim.notify with the prefix in the message when lib.nvim is absent", function()
-    local notify = fresh(false)
-    local seen = {}
-    local real_notify = vim.notify
-    ---@diagnostic disable-next-line: duplicate-set-field
-    vim.notify = function(msg, level)
-      seen[#seen + 1] = { msg = msg, level = level }
-    end
+  it("fails loudly, naming the module, when lib.nvim is absent", function()
+    local ok, err = pcall(fresh, false)
 
-    notify.info("started")
-    notify.warn("careful")
-    notify.error("broken")
-
-    vim.notify = real_notify
-
-    assert.are.same({
-      { msg = "[sandbox.nvim] started", level = vim.log.levels.INFO },
-      { msg = "[sandbox.nvim] careful", level = vim.log.levels.WARN },
-      { msg = "[sandbox.nvim] broken", level = vim.log.levels.ERROR },
-    }, seen)
-    -- The logger half still runs in that world: it is a no-op there, but the
-    -- call must not be skipped, or restoring lib.nvim would change behaviour.
-    assert.are.equal(2, #logged)
+    assert.is_false(ok)
+    assert.is_truthy(tostring(err):find("lib.nvim.notify", 1, true))
   end)
 end)

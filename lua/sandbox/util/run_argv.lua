@@ -1,48 +1,34 @@
 ---@module 'sandbox.util.run_argv'
---- Argv runner: uses lib.nvim's cross.run_argv when lib.nvim is installed,
---- falls back to plain vim.fn.system otherwise (lib.nvim stays an optional
---- dependency, matching sandbox.notify's convention).
+--- Argv runner on lib.nvim's cross.run_argv (lib.nvim is a hard dependency, docs/installation.md).
 
-local ok, lib_run_argv = pcall(require, "lib.nvim.cross.run_argv")
--- Optional dependency, same convention as lib_run_argv above: a completed
--- env (PATH + session vars — docker/podman/nerdctl's socket/context binding
--- is exactly the session-bound-auth problem this module fixes) for
--- container CLIs that are easy to miss from a non-login Neovim start.
+local lib_run_argv = require("lib.nvim.cross.run_argv")
+-- An optional, newer lib.nvim submodule (LUA-05): a completed env (PATH + session vars --
+-- docker/podman/nerdctl's socket/context binding is exactly the session-bound-auth problem this
+-- module fixes) for container CLIs that are easy to miss from a non-login Neovim start.
 local ok_env, spawn_env = pcall(require, "lib.nvim.cross.run.env")
 
 local M = {}
 
-if ok then
-  ---`lib.nvim.cross.run_argv.run_blocking_captured` takes no opts (no env
-  ---support), so route through `vim.system` directly with a completed env
-  ---when both lib.nvim's env module and `vim.system` are available; fall
-  ---back to the unenriched `run_argv` call otherwise (old Neovim without
-  ---`vim.system`, or lib.nvim installed without the env submodule).
-  ---@param cmd string[]
-  ---@param input? string
-  ---@return boolean ok
-  ---@return string output
-  function M.run_blocking_captured(cmd, input)
-    if ok_env and vim.system then
-      local sok, obj = pcall(function()
-        return vim.system(cmd, spawn_env.apply({ text = true, stdin = input })):wait()
-      end)
-      if not sok then
-        return false, tostring(obj)
-      end
-      return obj.code == 0, obj.stdout or ""
+---`lib.nvim.cross.run_argv.run_blocking_captured` takes no opts (no env
+---support), so route through `vim.system` directly with a completed env
+---when both lib.nvim's env module and `vim.system` are available; fall
+---back to the unenriched `run_argv` call otherwise (old Neovim without
+---`vim.system`, or lib.nvim installed without the env submodule).
+---@param cmd string[]
+---@param input? string
+---@return boolean ok
+---@return string output
+function M.run_blocking_captured(cmd, input)
+  if ok_env and vim.system then
+    local sok, obj = pcall(function()
+      return vim.system(cmd, spawn_env.apply({ text = true, stdin = input })):wait()
+    end)
+    if not sok then
+      return false, tostring(obj)
     end
-    return lib_run_argv.run_blocking_captured(cmd, input)
+    return obj.code == 0, obj.stdout or ""
   end
-else
-  ---@param cmd string[]
-  ---@param input? string
-  ---@return boolean ok
-  ---@return string output
-  function M.run_blocking_captured(cmd, input)
-    local out = vim.fn.system(cmd, input or "")
-    return vim.v.shell_error == 0, out
-  end
+  return lib_run_argv.run_blocking_captured(cmd, input)
 end
 
 local ok_progress, progress_mod = pcall(require, "lib.nvim.progress")
@@ -96,8 +82,8 @@ end
 ---@internal
 --- Start an indicator for `cmd`, or nil when lib.nvim isn't installed. The
 --- style is read lazily from the live config so `setup()` ordering never
---- matters, and the whole thing is a no-op without lib.nvim - progress is a
---- soft dependency here exactly like `notify.lua`'s factory.
+--- matters, and the whole thing is a no-op when the installed lib.nvim predates
+--- its `progress` submodule (an optional, newer submodule: LUA-05).
 --- @param cmd string[]
 --- @return table|nil
 local function start_progress(cmd)

@@ -23,9 +23,8 @@ end
 function M.check()
   health.start("sandbox.nvim healthcheck")
 
-  -- docs/installation.md documents lib.nvim as **required** -- the command
-  -- layer and every buffer/window view depend on it directly, unlike the
-  -- handful of soft `pcall(require, "lib.nvim...")` fallbacks elsewhere.
+  -- docs/installation.md documents lib.nvim as **required** -- every module
+  -- requires it directly (only newer, optional submodules are `pcall`ed, LUA-05).
   -- Without it, `require("sandbox")` below throws deep inside an adapter's
   -- own unguarded `require("lib.nvim...")` -- reported here plainly, before
   -- that happens, instead of as a raw "module not found" traceback that

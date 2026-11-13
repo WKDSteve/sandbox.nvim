@@ -36,21 +36,6 @@ local KNOWN_PATTERNS = {
 }
 
 ---@internal
---- Where the untruncated message can be read.
----
---- lib.nvim is a soft dependency here (see `sandbox.logger`), so the hint has
---- to be true in both worlds: with it, the logger recorded the raw text and
---- `:LibLogger show` displays it; without it, `sandbox.logger` is a no-op and
---- pointing at it would be a lie. Raising the cap is the honest answer there.
---- @return string
-local function full_text_hint()
-  if pcall(require, "lib.nvim.logger") then
-    return ":LibLogger show"
-  end
-  return "raise max_error_length"
-end
-
----@internal
 --- @param raw_err string|nil
 --- @return string
 local function first_line(raw_err)
@@ -71,7 +56,7 @@ local function first_line(raw_err)
     -- goes to `sandbox.logger` on every error either way, but a reader who
     -- only ever sees "..." has no reason to suspect a log exists -- and it is
     -- precisely the long messages where the cut-off half is the one needed.
-    line = line:sub(1, cap) .. "… (full text: " .. full_text_hint() .. ")"
+    line = line:sub(1, cap) .. "… (full text: :LibLogger show)"
   end
 
   return line

@@ -93,13 +93,13 @@ describe("util.run_argv", function()
     assert.are.same({ "one", "two" }, vim.split(vim.trim(done_output), "\n", { plain = true }))
   end)
 
-  --- The progress indicator is a soft dependency, so these only assert
-  --- anything when lib.nvim is actually on the rtp (LIB_NVIM_PATH set). The
+  --- lib.nvim (a hard dependency of the suite) provides the progress
+  --- indicator; a checkout without it is a broken test setup, not a skip. The
   --- "statusline" style is what makes this testable at all: it is headless and
   --- keeps its text in a readable registry, so there is no window or
   --- notification to intercept.
   describe("progress indicator", function()
-    local ok_progress, statusline = pcall(require, "lib.nvim.progress.styles.statusline")
+    local statusline = require("lib.nvim.progress.styles.statusline")
     local config = require("sandbox.config")
     local prev_style
 
@@ -113,10 +113,6 @@ describe("util.run_argv", function()
     end)
 
     it("publishes the operation while it runs and clears it afterwards", function()
-      if not ok_progress then
-        return -- lib.nvim absent: run_async_captured is expected to be a no-op here
-      end
-
       -- Long enough to outlive the 150ms delay guard, so the handle actually
       -- becomes visible rather than being suppressed as a fast operation.
       local sleep_cmd = vim.fn.has("win32") == 1 and { "cmd", "/c", "ping -n 2 127.0.0.1 >NUL" } or { "sleep", "1" }
@@ -142,10 +138,6 @@ describe("util.run_argv", function()
     end)
 
     it("does not leave a stale entry behind when the job is stopped", function()
-      if not ok_progress then
-        return
-      end
-
       local sleep_cmd = vim.fn.has("win32") == 1 and { "cmd", "/c", "ping -n 5 127.0.0.1 >NUL" } or { "sleep", "5" }
 
       local finished = false
