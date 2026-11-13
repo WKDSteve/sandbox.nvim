@@ -71,3 +71,17 @@ each page answers.
 ## License
 
 sandbox.nvim is released under the [MIT License](https://opensource.org/licenses/MIT) — see [LICENSE](LICENSE).
+
+<!-- connections:begin (written by the app-icons tool of the workshop; change integrations.json there, not this block) -->
+## Connections
+
+![sandbox.nvim: what it uses and what uses it](assets/graphs/sandbox.nvim.png)
+
+**Uses**
+
+- [gitsuite.nvim](https://github.com/WKDSteve/gitsuite.nvim): Before a devcontainer build, sandbox.nvim asks gitsuite.nvim whether there are unresolved conflicts (`gitsuite.features.conflict`). ([picture](assets/graphs/pair/sandbox.nvim--gitsuite.nvim.png))
+- [hover.nvim](https://github.com/WKDSteve/hover.nvim): sandbox.nvim registers an image preview with hover.nvim; `:Hover show` asks for it. ([picture](assets/graphs/pair/sandbox.nvim--hover.nvim.png))
+- [terminal.nvim](https://github.com/WKDSteve/terminal.nvim): sandbox.nvim runs a command in the terminal of terminal.nvim when it is installed (`util.exec_target`). ([picture](assets/graphs/pair/sandbox.nvim--terminal.nvim.png))
+- [ui.nvim](https://github.com/WKDSteve/ui.nvim): The container commands of sandbox.nvim ask for their fields through the kit of ui.nvim (`ui.kit`). ([picture](assets/graphs/pair/sandbox.nvim--ui.nvim.png))
+- [lib.nvim](https://github.com/WKDSteve/lib.nvim): the shared base of the plugins.
+<!-- connections:end -->
