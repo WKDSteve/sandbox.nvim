@@ -84,4 +84,8 @@ sandbox.nvim is released under the [MIT License](https://opensource.org/licenses
 - [terminal.nvim](https://github.com/WKDSteve/terminal.nvim): sandbox.nvim runs a command in the terminal of terminal.nvim when it is installed (`util.exec_target`). ([picture](assets/graphs/pair/sandbox.nvim--terminal.nvim.png))
 - [ui.nvim](https://github.com/WKDSteve/ui.nvim): The container commands of sandbox.nvim ask for their fields through the kit of ui.nvim (`ui.kit`). ([picture](assets/graphs/pair/sandbox.nvim--ui.nvim.png))
 - [lib.nvim](https://github.com/WKDSteve/lib.nvim): the shared base of the plugins.
+
+**Used by**
+
+- [ui.nvim](https://github.com/WKDSteve/ui.nvim): The statusline module `sandbox_ambient` of ui.nvim shows the running containers of sandbox.nvim (`docker (2/5)`), once sandbox.nvim is loaded. ([picture](assets/graphs/pair/ui.nvim--sandbox.nvim.png))
 <!-- connections:end -->
