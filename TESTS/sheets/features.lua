@@ -43,6 +43,11 @@ return {
     docs = "docs/FEATURES/CONTAINERS.md",
   },
   {
+    id = "sandbox.run-once",
+    title = "run_once runs a container once, attached, for a headless caller; cancel() stops the container",
+    docs = "docs/FEATURES/CONTAINERS.md",
+  },
+  {
     id = "sandbox.exec",
     title = ":Sandbox container exec opens a shell in a container, exec-once runs one command; both take workdir=",
     surface = { "command:Sandbox container exec", "command:Sandbox container exec-once" },
@@ -108,6 +113,8 @@ return {
     id = "sandbox.telescope",
     title = "The telescope extension picks a container and acts on it",
     docs = "docs/FEATURES/UI.md",
+    -- telescope.nvim is no dependency of the test editor; its pickers list through the same runners as the commands
+    perf = "user",
   },
   {
     id = "sandbox.statusline",
@@ -119,5 +126,6 @@ return {
     title = ":Sandbox docs generate writes the route tables of docs/BINDINGS.md from the registered routes",
     surface = { "command:Sandbox docs generate" },
     docs = "docs/FEATURES/UI.md",
+    perf = "skip:starts no process, it writes docs/BINDINGS.md from the registered routes",
   },
 }
