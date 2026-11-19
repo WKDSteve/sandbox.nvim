@@ -34,6 +34,7 @@ return {
   id = "sandbox.real-exec",
   feature = "sandbox.exec",
   title = "sandbox.nvim: exec and exec-once open a terminal on the engine CLI for real",
+  task = "sandbox.nvim/manual-checklist-run",
   sizes = { { rows = 40, cols = 160 } },
   fakes = { "docker", "podman" },
   steps = steps,

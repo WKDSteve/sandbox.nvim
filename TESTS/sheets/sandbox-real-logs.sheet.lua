@@ -5,6 +5,7 @@ return {
   id = "sandbox.real-logs",
   feature = "sandbox.logs",
   title = "sandbox.nvim: logs and logs-follow start the engine CLI for real",
+  task = "sandbox.nvim/manual-checklist-run",
   sizes = { { rows = 40, cols = 160 } },
   fakes = { "docker" },
   steps = {

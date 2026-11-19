@@ -6,6 +6,7 @@ return {
   id = "sandbox.real-engine",
   feature = "sandbox.engine",
   title = "sandbox.nvim: engine detection probes the CLI for real, once per session",
+  task = "sandbox.nvim/manual-checklist-run",
   sizes = { { rows = 30, cols = 120 } },
   fakes = { "docker", "podman" },
   steps = {

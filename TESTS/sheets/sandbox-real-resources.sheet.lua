@@ -37,6 +37,7 @@ return {
   id = "sandbox.real-resources",
   feature = "sandbox.resources",
   title = "sandbox.nvim: image, volume, network and registry commands start the engine CLI for real",
+  task = "sandbox.nvim/manual-checklist-run",
   sizes = { { rows = 40, cols = 160 } },
   fakes = { "docker" },
   steps = steps,

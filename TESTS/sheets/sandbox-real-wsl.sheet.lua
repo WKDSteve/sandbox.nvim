@@ -32,6 +32,7 @@ return {
   id = "sandbox.real-wsl",
   feature = "sandbox.wsl",
   title = "sandbox.nvim: :Sandbox wsl list, start, exec and stop start wsl for real",
+  task = "sandbox.nvim/manual-checklist-run",
   sizes = { { rows = 40, cols = 160 } },
   fakes = { "wsl" },
   steps = steps,

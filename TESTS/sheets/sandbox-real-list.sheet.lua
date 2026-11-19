@@ -5,6 +5,7 @@ return {
   id = "sandbox.real-list",
   feature = "sandbox.container-list",
   title = "sandbox.nvim: the container list runs ps for real, E lists the next engine",
+  task = "sandbox.nvim/manual-checklist-run",
   sizes = { { rows = 30, cols = 120 } },
   fakes = { "docker", "podman" },
   steps = {

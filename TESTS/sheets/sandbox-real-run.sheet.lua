@@ -4,6 +4,7 @@ return {
   id = "sandbox.real-run",
   feature = "sandbox.run-wizard",
   title = "sandbox.nvim: the run wizard starts one docker run for real",
+  task = "sandbox.nvim/manual-checklist-run",
   sizes = { { rows = 40, cols = 160 } },
   fakes = { "docker" },
   steps = {

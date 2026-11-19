@@ -44,6 +44,7 @@ return {
   id = "sandbox.real-container",
   feature = "sandbox.container-commands",
   title = "sandbox.nvim: the :Sandbox container lifecycle commands start the engine CLI for real",
+  task = "sandbox.nvim/manual-checklist-run",
   sizes = { { rows = 40, cols = 160 } },
   fakes = { "docker", "podman" },
   steps = steps,

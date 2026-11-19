@@ -4,6 +4,7 @@ return {
   id = "sandbox.real-devcontainer",
   feature = "sandbox.devcontainer",
   title = "sandbox.nvim: devcontainer build and attach start the engine CLI for real",
+  task = "sandbox.nvim/manual-checklist-run",
   sizes = { { rows = 30, cols = 120 } },
   fakes = { "docker" },
   steps = {

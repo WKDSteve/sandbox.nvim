@@ -33,6 +33,7 @@ return {
   id = "sandbox.real-inspect",
   feature = "sandbox.inspect",
   title = "sandbox.nvim: inspect, stats, top and cp start the engine CLI for real",
+  task = "sandbox.nvim/manual-checklist-run",
   sizes = { { rows = 40, cols = 160 } },
   fakes = { "docker" },
   steps = steps,
