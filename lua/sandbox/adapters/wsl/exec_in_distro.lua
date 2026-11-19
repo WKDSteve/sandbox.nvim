@@ -21,7 +21,6 @@ function M.exec_in_distro(name, command)
 
   vim.cmd("vnew")
   local buf = vim.api.nvim_get_current_buf()
-  api.nvim_buf_set_name(buf, "sandbox.nvim://wsl/" .. name)
   -- `jobstart({ term = true })` replaces the deprecated `termopen`, but only
   -- exists from 0.11; older supported versions fall back to the old call.
   if vim.fn.has("nvim-0.11") == 1 then
@@ -30,6 +29,8 @@ function M.exec_in_distro(name, command)
     ---@diagnostic disable-next-line: deprecated
     vim.fn.termopen(args)
   end
+  -- After the start: a terminal job names its buffer term://..., a name set before it is lost.
+  api.nvim_buf_set_name(buf, "sandbox.nvim://wsl/" .. name)
   vim.bo[buf].bufhidden = "wipe"
   api.nvim_set_current_buf(buf)
   api.nvim_feedkeys(vim.api.nvim_replace_termcodes("i", true, false, true), "n", true)

@@ -1,0 +1,51 @@
+-- Real processes: every lifecycle command of :Sandbox container starts the engine CLI by the path a user meets
+-- (the blocking capture, a background job, the async capture, a terminal buffer with --buffer), on docker and on
+-- podman's own stop. The CLIs are the recording stand-ins of `fakes` (TESTS/sheets/_real.lua): nothing of the plugin
+-- is replaced, so `testing perf` sees each start. A real engine is the business of the manual checklist.
+--
+-- The steps are built from the table below: a sheet is data, but plain Lua (numeric `for`) runs while it is read.
+
+---{ the command after `:Sandbox `, the program, the words of its call in order, the buffer it leaves focused }
+local C = {
+  { "container start sbx-db", "docker", "start sbx-db" },
+  { "container stop sbx-web", "docker", "stop sbx-web" },
+  { "container kill sbx-web", "docker", "kill sbx-web" },
+  { "container restart sbx-web", "docker", "restart sbx-web" },
+  { "container pause sbx-web", "docker", "pause sbx-web" },
+  { "container unpause sbx-web", "docker", "unpause sbx-web" },
+  { "container rename sbx-web sbx-new", "docker", "rename sbx-web sbx-new" },
+  { "container remove sbx-db", "docker", "rm sbx-db" },
+  { "container prune", "docker", "container prune" },
+  { "container start sbx-db --buffer", "docker", "start sbx-db", "sandbox.nvim://term/start/sbx-db" },
+  { "container prune -b", "docker", "container prune", "sandbox.nvim://term/prune" },
+  { "engine set podman" },
+  { "container stop sbx-web", "podman", "stop sbx-web" },
+}
+
+local steps = {
+  { lua = [[dofile(vim.fn.getcwd() .. "/TESTS/sheets/_real.lua")]] },
+  { keys = ":Sandbox engine set docker<CR>" },
+}
+for i = 1, #C do
+  local cmd, program, words, buf = C[i][1], C[i][2], C[i][3], C[i][4]
+  steps[#steps + 1] = { lua = "_G.fresh(); _G.m = _G.mark()" }
+  steps[#steps + 1] = { wait = [[vim.fn.mode() == "n"]] }
+  steps[#steps + 1] = { keys = ":Sandbox " .. cmd .. "<CR>" }
+  if program then
+    local check = ("_G.ran(%q, %q, _G.m)"):format(program, words)
+    if buf then
+      check = check .. (" and _G.bufname() == %q"):format(buf)
+    end
+    steps[#steps + 1] = { wait = check, note = cmd .. ": " .. program .. " " .. words }
+  end
+end
+
+return {
+  id = "sandbox.real-container",
+  feature = "sandbox.container-commands",
+  title = "sandbox.nvim: the :Sandbox container lifecycle commands start the engine CLI for real",
+  sizes = { { rows = 40, cols = 160 } },
+  fakes = { "docker", "podman" },
+  steps = steps,
+  manual = { "against a real engine: each command changes the container's state as its name says" },
+}
