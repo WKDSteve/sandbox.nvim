@@ -449,6 +449,10 @@ describe("bindings.usrcmds dispatch through the real composer", function()
       get_engine = function()
         return { name = "fake" }
       end,
+      -- engine routes run once the engine is known; here it always is
+      resolve_engine_name_async = function(on_done)
+        on_done("docker")
+      end,
     }
     require("sandbox.bindings.usrcmds").setup()
   end)
@@ -470,6 +474,35 @@ describe("bindings.usrcmds dispatch through the real composer", function()
     end
     return nil
   end
+
+  -- Without a pinned engine the first command of a session finds it with a
+  -- probe (`podman version`). The dispatcher asks in the background and runs
+  -- an engine route once the answer is there; routes that never touch the
+  -- engine run at once.
+  it("runs an engine route only once detection answered, the others at once", function()
+    local pending = {}
+    package.loaded["sandbox"].resolve_engine_name_async = function(on_done)
+      pending[#pending + 1] = on_done
+    end
+
+    vim.cmd("Sandbox container list")
+    vim.cmd("Sandbox image tag alpine sbx:t")
+    assert.is_nil(last("list"), "the route waits for the engine")
+    assert.is_nil(last("tag"))
+    assert.are.equal(2, #pending)
+
+    vim.cmd("Sandbox engine get")
+    vim.cmd("Sandbox compose services")
+    assert.is_not_nil(last("get"), "engine get reports detection itself")
+    assert.is_not_nil(last("services"), "compose services only reads the file")
+    assert.are.equal(2, #pending)
+
+    for _, on_done in ipairs(pending) do
+      on_done("podman")
+    end
+    assert.are.equal("container_commands", last("list").module)
+    assert.are.same({ "alpine", "sbx:t" }, last("tag").args)
+  end)
 
   it("creates both :Sandbox and :Sbx", function()
     assert.are.equal(2, vim.fn.exists(":Sandbox"))

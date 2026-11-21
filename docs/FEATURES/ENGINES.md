@@ -30,6 +30,10 @@ identical from the outside.
 connect *is* the cost), so it does not run at `setup()`: startup keeps the
 `PATH`-only pick, and the probe happens the first time something actually
 reaches for the engine. The answer is then remembered for the session.
+The probe runs in the background: a `:Sandbox` command that needs the engine
+starts once it is answered (a second command typed meanwhile joins the same
+probe), and the statusline shows nothing until then. Only `<Tab>` completion,
+which needs its candidates at once, still asks synchronously.
 `:Sandbox engine reset` forgets it, which is what to run after starting a
 daemon mid-session.
 

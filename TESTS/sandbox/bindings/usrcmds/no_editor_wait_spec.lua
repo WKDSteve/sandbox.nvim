@@ -505,6 +505,47 @@ describe("user commands do not wait for the engine", function()
       end
     end)
 
+    it("the first engine command of a session probes in the background, then runs", function()
+      require("sandbox.bindings.usrcmds").setup()
+      vim.cmd("Sandbox image tag alpine:edge sbx:t")
+
+      assert.are.equal(1, #spawned, "only the probe runs before the engine is known")
+      assert.are.equal("podman version", table.concat(spawned[1].cmd, " "))
+
+      -- A second command typed while the probe runs joins it.
+      vim.cmd("Sandbox volume create sbx-vol")
+      assert.are.equal(1, #spawned)
+
+      exit(1, 0)
+      settle(function()
+        return #spawned == 3
+      end)
+      assert.are.equal("podman tag alpine:edge sbx:t", table.concat(spawned[2].cmd, " "))
+      assert.are.equal("podman volume create sbx-vol", table.concat(spawned[3].cmd, " "))
+
+      -- Known now: the next command starts its CLI right away, without a probe.
+      vim.cmd("Sandbox network create sbx-net")
+      assert.are.equal("podman network create sbx-net", table.concat(spawned[4].cmd, " "))
+      pcall(vim.api.nvim_del_user_command, "Sandbox")
+      pcall(vim.api.nvim_del_user_command, "Sbx")
+    end)
+
+    it("the statusline does not wait for detection either", function()
+      local statusline = require("sandbox.statusline")
+      assert.are.equal("", statusline.status())
+      assert.are.equal("podman version", table.concat(spawned[1].cmd, " "))
+      -- every redraw while the probe runs joins it
+      statusline.status()
+      assert.are.equal(1, #spawned)
+
+      exit(1, 0)
+      settle(function()
+        return require("sandbox.engine_utils").peek_live_engine() == "podman"
+      end)
+      statusline.status()
+      assert.are.equal("podman ps", table.concat(spawned[2].cmd, " "):sub(1, #"podman ps"))
+    end)
+
     it("engine get probes in the background and reports after the answer", function()
       require("sandbox.bindings.usrcmds.engine_commands").get()
 

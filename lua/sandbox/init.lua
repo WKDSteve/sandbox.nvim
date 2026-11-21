@@ -80,6 +80,17 @@ function M.resolve_engine_name_async(on_done)
   require("sandbox.engine_utils").get_live_engine_async(on_done)
 end
 
+--- `M.resolve_engine_name` when the answer needs no process: an override, or
+--- detection whose probes have answered. nil while detection still has to
+--- ask an engine (`M.resolve_engine_name_async` asks it in the background).
+--- @return Sandbox.Engine|nil
+function M.peek_engine_name()
+  if vim.g.sandbox_engine or config.engine_named or require("sandbox.util.project_config").read_engine_override() then
+    return M.resolve_engine_name()
+  end
+  return require("sandbox.engine_utils").peek_live_engine()
+end
+
 --- Get the active engine implementation
 --- @return table|nil
 function M.get_engine()

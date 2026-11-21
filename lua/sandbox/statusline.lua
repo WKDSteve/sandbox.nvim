@@ -119,8 +119,17 @@ function M.status()
   -- `.sandboxrc`-pinning `:cd`) must not keep serving the previous engine's
   -- reading just because the TTL has not expired yet.
   local ok_engine, current_engine = pcall(function()
-    return require("sandbox").resolve_engine_name()
+    return require("sandbox").peek_engine_name()
   end)
+  if ok_engine and current_engine == nil then
+    -- Detection has not answered yet (the first redraw of a session): finding
+    -- the engine is a process (`podman version`, up to the probe timeout), and
+    -- a statusline must not hold the editor for it. Start it in the background
+    -- -- a running probe is joined, not repeated -- and show what is cached; a
+    -- redraw after it answered takes the normal path.
+    require("sandbox").resolve_engine_name_async(function() end)
+    return cache and cache.text or ""
+  end
   local engine_name = ok_engine and current_engine or nil
   if not cache or cache.engine ~= engine_name or (now - cache.at) >= ttl_ms() then
     refresh()

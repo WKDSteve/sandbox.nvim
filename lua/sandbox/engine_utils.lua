@@ -230,6 +230,25 @@ function M.get_live_engine()
   return M.get_engine()
 end
 
+--- `get_live_engine`'s answer when it needs no process: the name once every
+--- probe it would run has answered, nil while one is still unknown or running.
+---
+--- For the ambient callers (the statusline) that must not start the probe in
+--- the foreground: nil means "ask `get_live_engine_async` and look again".
+--- @return Sandbox.Engine|nil
+function M.peek_live_engine()
+  for _, name in ipairs(M.installed()) do
+    local answer = responds[name]
+    if answer == nil then
+      return nil
+    end
+    if answer then
+      return name
+    end
+  end
+  return M.get_engine()
+end
+
 --- `M.get_live_engine` without the wait: the same pick, in the same
 --- preference order (one probe at a time, stopping at the first engine that
 --- answers -- no process is started for an engine the pick never reaches),

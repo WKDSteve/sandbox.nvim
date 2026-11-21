@@ -999,18 +999,50 @@ local function registry_routes()
   }
 end
 
+---Routes that never ask the engine: they run at once, not behind its detection.
+local NO_ENGINE = { ["compose services"] = true }
+
+---@internal
+--- Run each route of `routes` only once the engine is known.
+---
+--- Without a pinned engine (`:Sandbox engine set`, `.sandboxrc`, `engine =` in
+--- the config) the first `get_engine()` of a session asks the installed
+--- engines whether they answer (`podman version`): a process the editor
+--- waited for, up to the 3 s probe timeout on a hung daemon -- and every
+--- command was that first one in turn. `resolve_engine_name_async` asks in the
+--- background instead; a command typed while the probe runs joins it rather
+--- than starting a second one, and the handler's own `get_engine()` then reads
+--- the kept answer. Once the answer is known (or with a pinned engine) the
+--- callback runs synchronously, so the route runs exactly as before.
+--- `<Tab>` completion is not a route and stays synchronous.
+---@param routes table[]
+---@return table[] routes, changed in place
+local function after_engine(routes)
+  for _, route in ipairs(routes) do
+    local run = route.run
+    if type(run) == "function" and not NO_ENGINE[table.concat(route.path, " ")] then
+      route.run = function(ctx)
+        require("sandbox").resolve_engine_name_async(function()
+          run(ctx)
+        end)
+      end
+    end
+  end
+  return routes
+end
+
 ---Register :Sandbox and its short alias :Sbx (same spec, two command names)
 function M.setup()
   local routes = {}
-  vim.list_extend(routes, container_routes())
-  vim.list_extend(routes, image_routes())
-  vim.list_extend(routes, volume_routes())
-  vim.list_extend(routes, network_routes())
-  vim.list_extend(routes, compose_routes())
+  vim.list_extend(routes, after_engine(container_routes()))
+  vim.list_extend(routes, after_engine(image_routes()))
+  vim.list_extend(routes, after_engine(volume_routes()))
+  vim.list_extend(routes, after_engine(network_routes()))
+  vim.list_extend(routes, after_engine(compose_routes()))
   vim.list_extend(routes, engine_routes())
-  vim.list_extend(routes, registry_routes())
+  vim.list_extend(routes, after_engine(registry_routes()))
   vim.list_extend(routes, docs_routes())
-  vim.list_extend(routes, devcontainer_routes())
+  vim.list_extend(routes, after_engine(devcontainer_routes()))
 
   -- WSL commands operate independently of the container engine and only
   -- make sense where wsl.exe is reachable -- matches the original guard in

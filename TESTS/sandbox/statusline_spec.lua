@@ -25,6 +25,12 @@ describe("sandbox.statusline", function()
       resolve_engine_name = function()
         return opts.engine_name
       end,
+      peek_engine_name = function()
+        return opts.engine_name
+      end,
+      resolve_engine_name_async = function(on_done)
+        on_done(opts.engine_name)
+      end,
       get_engine = function()
         if opts.engine_name == nil then
           return nil
@@ -114,6 +120,9 @@ describe("sandbox.statusline", function()
       resolve_engine_name = function()
         return current_engine
       end,
+      peek_engine_name = function()
+        return current_engine
+      end,
       get_engine = function()
         return {
           list_containers = function(on_done)
@@ -128,6 +137,51 @@ describe("sandbox.statusline", function()
 
     current_engine = "podman"
     assert.are.equal("podman (0/0)", statusline.status())
+  end)
+
+  -- The first redraw of a session without a pinned engine: detection has not
+  -- answered, and asking it synchronously is a `podman version` the editor
+  -- would wait for (up to the 3 s probe timeout). The statusline starts the
+  -- probe in the background and draws what it has.
+  it("does not wait for engine detection that has not answered yet", function()
+    local asked_async, asked_sync, listed = 0, 0, 0
+    local probe_done
+    package.loaded["sandbox.statusline"] = nil
+    package.loaded["sandbox.config"] = nil
+    require("sandbox.config").options.status_cache_ttl_ms = 60000
+
+    local known = nil
+    package.loaded["sandbox"] = {
+      peek_engine_name = function()
+        return known
+      end,
+      resolve_engine_name = function()
+        asked_sync = asked_sync + 1
+        return "podman"
+      end,
+      resolve_engine_name_async = function(on_done)
+        asked_async = asked_async + 1
+        probe_done = on_done
+      end,
+      get_engine = function()
+        return {
+          list_containers = function(on_done)
+            listed = listed + 1
+            on_done({ { name = "a", status = "running" } })
+          end,
+        }
+      end,
+    }
+    local statusline = require("sandbox.statusline")
+
+    assert.are.equal("", statusline.status())
+    assert.are.equal(1, asked_async, "detection is started in the background")
+    assert.are.equal(0, asked_sync, "nothing asks the engine synchronously")
+    assert.are.equal(0, listed)
+
+    known = "podman"
+    probe_done("podman")
+    assert.are.equal("podman (1/1)", statusline.status(), "a redraw after the answer takes the normal path")
   end)
 
   it("never stacks up a second ps while the first is still in flight", function()

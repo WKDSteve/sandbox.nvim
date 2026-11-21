@@ -59,6 +59,12 @@ ambient refresh every few seconds would otherwise paint a permanent
 Only one refresh is ever in flight: a statusline redrawing at speed cannot
 stack up one `ps` per redraw while the first is still running.
 
+Finding the engine does not hold a redraw either. Without a pinned engine
+(`:Sandbox engine set`, `.sandboxrc`, `engine =` in the config) the plugin asks
+the installed engines whether they answer (`podman version`, once per
+session). The first redraw starts that question in the background and shows
+nothing; the redraws after the answer show the summary.
+
 ## The one cost that is left
 
 Spawning a process is synchronous up to the fork/exec, so the redraw that
