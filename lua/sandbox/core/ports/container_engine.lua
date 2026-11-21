@@ -157,8 +157,9 @@ return {
   end,
   --- @param source string
   --- @param target string
+  --- @param _on_done? fun(ok: boolean, err: string|nil) runs asynchronously when given
   --- @return boolean ok, string|nil err
-  tag_image = function(source, target)
+  tag_image = function(source, target, _on_done)
     error("tag_image not implemented. " .. source .. " -> " .. target)
   end,
 
@@ -169,8 +170,9 @@ return {
     error("list_volumes not implemented")
   end,
   --- @param name string
+  --- @param _on_done? fun(ok: boolean, err: string|nil) runs asynchronously when given
   --- @return boolean ok, string|nil err
-  create_volume = function(name)
+  create_volume = function(name, _on_done)
     error(name .. ": create_volume not implemented.")
   end,
   --- @param name string
@@ -179,8 +181,9 @@ return {
     error(name .. ": remove_volume not implemented.")
   end,
   --- @param name string
+  --- @param _on_done? fun(result: table|string[]) runs asynchronously when given
   --- @return table|string[]
-  inspect_volume = function(name)
+  inspect_volume = function(name, _on_done)
     error(name .. ": inspect_volume not implemented.")
   end,
   --- @param _on_done? fun(ok: boolean, err: string|nil)
@@ -189,23 +192,27 @@ return {
   end,
   --- @param image string
   --- @param path string
+  --- @param _on_done? fun(ok: boolean, err: string|nil) runs asynchronously when given
   --- @return boolean ok, string|nil err
-  save_image = function(image, path)
+  save_image = function(image, path, _on_done)
     error("save_image not implemented. " .. image .. " -> " .. path)
   end,
   --- @param path string
+  --- @param _on_done? fun(ok: boolean, err: string|nil) runs asynchronously when given
   --- @return boolean ok, string|nil err
-  load_image = function(path)
+  load_image = function(path, _on_done)
     error(path .. ": load_image not implemented.")
   end,
   --- @param image string
+  --- @param _on_done? fun(lines: string[]|nil, err: string|nil) runs asynchronously when given
   --- @return string[]|nil lines, string|nil err
-  history_image = function(image)
+  history_image = function(image, _on_done)
     error(image .. ": history_image not implemented.")
   end,
   --- @param image string
+  --- @param _on_done? fun(result: table|string[]) runs asynchronously when given
   --- @return table|string[]
-  inspect_image = function(image)
+  inspect_image = function(image, _on_done)
     error(image .. ": inspect_image not implemented.")
   end,
 
@@ -216,8 +223,9 @@ return {
     error("list_networks not implemented")
   end,
   --- @param name string
+  --- @param _on_done? fun(ok: boolean, err: string|nil) runs asynchronously when given
   --- @return boolean ok, string|nil err
-  create_network = function(name)
+  create_network = function(name, _on_done)
     error(name .. ": create_network not implemented.")
   end,
   --- @param name string
@@ -226,20 +234,23 @@ return {
     error(name .. ": remove_network not implemented.")
   end,
   --- @param name string
+  --- @param _on_done? fun(result: table|string[]) runs asynchronously when given
   --- @return table|string[]
-  inspect_network = function(name)
+  inspect_network = function(name, _on_done)
     error(name .. ": inspect_network not implemented.")
   end,
   --- @param network string
   --- @param container_id string
+  --- @param _on_done? fun(ok: boolean, err: string|nil) runs asynchronously when given
   --- @return boolean ok, string|nil err
-  connect_network = function(network, container_id)
+  connect_network = function(network, container_id, _on_done)
     error("connect_network not implemented. " .. network .. " <- " .. container_id)
   end,
   --- @param network string
   --- @param container_id string
+  --- @param _on_done? fun(ok: boolean, err: string|nil) runs asynchronously when given
   --- @return boolean ok, string|nil err
-  disconnect_network = function(network, container_id)
+  disconnect_network = function(network, container_id, _on_done)
     error("disconnect_network not implemented. " .. network .. " <- " .. container_id)
   end,
   --- @param _on_done? fun(ok: boolean, err: string|nil)
@@ -252,8 +263,9 @@ return {
   --- @param username string
   --- @param password string
   --- @param registry? string defaults to Docker Hub when omitted
+  --- @param _on_done? fun(ok: boolean, err: string|nil) runs asynchronously when given
   --- @return boolean ok, string|nil err
-  login_registry = function(username, password, registry)
+  login_registry = function(username, password, registry, _on_done)
     error("login_registry not implemented. username: " .. username .. " registry: " .. tostring(registry))
   end,
   --- @param registry? string defaults to Docker Hub when omitted

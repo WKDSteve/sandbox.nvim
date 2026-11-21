@@ -148,16 +148,17 @@ function M.tag(source, target)
   end
 
   local usecase = require("sandbox.core.usecases.images.tag_image")
-  local ok, err = usecase(engine, source, target)
-  if not ok then
-    notify.error(
-      "Failed to tag image " .. source .. ": " .. friendly_error(err),
-      { source = source, target = target, err = err }
-    )
-    return
-  end
+  usecase(engine, source, target, function(ok, err)
+    if not ok then
+      notify.error(
+        "Failed to tag image " .. source .. ": " .. friendly_error(err),
+        { source = source, target = target, err = err }
+      )
+      return
+    end
 
-  notify.info("Tagged: " .. source .. " -> " .. target)
+    notify.info("Tagged: " .. source .. " -> " .. target)
+  end)
 end
 
 --- Save (export) an image to a tarball on disk
@@ -174,17 +175,20 @@ function M.save(image, path)
     return
   end
 
+  -- Asynchronous with a progress indicator (cancelling it ends the `save`): writing a large image
+  -- takes as long as the disk needs, minutes for a multi-GB one.
   local usecase = require("sandbox.core.usecases.images.save_image")
-  local ok, err = usecase(engine, image, path)
-  if not ok then
-    notify.error(
-      "Failed to save image " .. image .. ": " .. friendly_error(err),
-      { image = image, path = path, err = err }
-    )
-    return
-  end
+  usecase(engine, image, path, function(ok, err)
+    if not ok then
+      notify.error(
+        "Failed to save image " .. image .. ": " .. friendly_error(err),
+        { image = image, path = path, err = err }
+      )
+      return
+    end
 
-  notify.info("Image saved: " .. image .. " -> " .. path)
+    notify.info("Image saved: " .. image .. " -> " .. path)
+  end)
 end
 
 --- Load (import) an image from a tarball on disk
@@ -200,14 +204,16 @@ function M.load(path)
     return
   end
 
+  -- Asynchronous with a progress indicator, like `save`: a load reads the whole tarball.
   local usecase = require("sandbox.core.usecases.images.load_image")
-  local ok, err = usecase(engine, path)
-  if not ok then
-    notify.error("Failed to load image from " .. path .. ": " .. friendly_error(err), { path = path, err = err })
-    return
-  end
+  usecase(engine, path, function(ok, err)
+    if not ok then
+      notify.error("Failed to load image from " .. path .. ": " .. friendly_error(err), { path = path, err = err })
+      return
+    end
 
-  notify.info("Image loaded from: " .. path)
+    notify.info("Image loaded from: " .. path)
+  end)
 end
 
 --- Show an image's layer history
@@ -224,14 +230,15 @@ function M.history(image)
   end
 
   local usecase = require("sandbox.core.usecases.images.history_image")
-  local lines, err = usecase(engine, image)
-  if not lines then
-    notify.error("Failed to get history for " .. image .. ": " .. friendly_error(err), { image = image, err = err })
-    return
-  end
+  usecase(engine, image, function(lines, err)
+    if not lines then
+      notify.error("Failed to get history for " .. image .. ": " .. friendly_error(err), { image = image, err = err })
+      return
+    end
 
-  local view = require("sandbox.ui.log_view")
-  view(lines, "image-history/" .. image)
+    local view = require("sandbox.ui.log_view")
+    view(lines, "image-history/" .. image)
+  end)
 end
 
 --- Inspect detailed information about an image
@@ -250,13 +257,13 @@ function M.inspect(image)
   local usecase = require("sandbox.core.usecases.images.inspect_image")
   local view = require("sandbox.ui.inspect_view")
 
-  local ok, result = pcall(usecase, engine, image)
+  -- pcall guards the call: an engine without inspect_image throws synchronously (the port's stub).
+  local ok, err = pcall(usecase, engine, image, function(result)
+    view(result, "image-" .. image)
+  end)
   if not ok then
-    notify.error("Failed to inspect image " .. image .. ": " .. tostring(result), { image = image, err = result })
-    return
+    notify.error("Failed to inspect image " .. image .. ": " .. tostring(err), { image = image, err = err })
   end
-
-  view(result, "image-" .. image)
 end
 
 --- Prune (remove) all dangling images

@@ -20,20 +20,18 @@ function Shared.new(bin)
   --- @param username string
   --- @param password string
   --- @param registry? string defaults to Docker Hub when omitted
+  --- @param on_done? fun(ok: boolean, err: string|nil) Optional: when given, runs asynchronously (with a
+  ---        progress indicator) and delivers exactly the values the synchronous form returns. The password
+  ---        goes by stdin on both paths.
   --- @return boolean ok
   --- @return string|nil err
-  function M.login(username, password, registry)
+  function M.login(username, password, registry, on_done)
     local args = { bin, "login", "--username", username, "--password-stdin" }
     if registry and registry ~= "" then
       args[#args + 1] = registry
     end
 
-    local ok, output = run_argv.run_blocking_captured(args, password)
-    if not ok then
-      return false, output
-    end
-
-    return true, nil
+    return run_argv.captured(args, run_argv.ok_or_err, on_done, { input = password })
   end
 
   return M

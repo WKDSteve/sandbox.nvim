@@ -76,11 +76,11 @@ local WSL = {
   { "wsl start sbx-wsl", "wsl -d sbx-wsl -- echo", "async" },
   { "wsl stop sbx-wsl", "wsl --terminate sbx-wsl", "async" },
   { "wsl exec sbx-wsl echo hello", "wsl -d sbx-wsl -- echo hello", "term", "sandbox.nvim://wsl/sbx-wsl" },
-  { "wsl set-default sbx-wsl", "wsl --set-default sbx-wsl", "blocking" },
-  { "wsl set-version sbx-wsl 1", "wsl --set-version sbx-wsl 1", "blocking" },
-  { "wsl export sbx-wsl ./d.tar", "wsl --export sbx-wsl ./d.tar", "blocking" },
-  { "wsl import sbx-new ./disk ./d.tar", "wsl --import sbx-new ./disk ./d.tar", "blocking" },
-  { "wsl shutdown-all", "wsl --shutdown", "blocking" },
+  { "wsl set-default sbx-wsl", "wsl --set-default sbx-wsl", "async" },
+  { "wsl set-version sbx-wsl 1", "wsl --set-version sbx-wsl 1", "async" },
+  { "wsl export sbx-wsl ./d.tar", "wsl --export sbx-wsl ./d.tar", "async" },
+  { "wsl import sbx-new ./disk ./d.tar", "wsl --import sbx-new ./disk ./d.tar", "async" },
+  { "wsl shutdown-all", "wsl --shutdown", "async" },
 }
 
 local steps = {
@@ -147,7 +147,7 @@ local steps = {
   { input = "sbx-user<CR>" },
   { wait = [[_G.asks("password")]] },
   { input = "pw<CR>" },
-  { wait = [[_G.only_call("docker login --username sbx-user --password-stdin ghcr.io", "blocking")]] },
+  { wait = [[_G.only_call("docker login --username sbx-user --password-stdin ghcr.io", "async")]] },
   { wait = [[_G.noted("Logged in to ghcr.io")]] },
   { lua = [[vim.cmd("stopinsert")]] },
   {

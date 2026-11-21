@@ -88,7 +88,9 @@ a return value) or handed to `on_done` with it (for the user command, which
 must not freeze the editor for the daemon round-trip).
 `run_argv.ok_or_err` is the `finish` of a command that only succeeds or fails;
 pass `{ stdout_only = true }` as the fourth argument when the output is parsed,
-so a daemon warning on stderr does not turn into a parse error.
+so a daemon warning on stderr does not turn into a parse error, and
+`{ input = secret }` for a command that reads stdin (`registry login`'s
+`--password-stdin`): both paths write it to the process and close stdin.
 
 Both `run_argv` entry points hand back the same bytes for the same command,
 line endings included — an adapter can share one parser between its blocking

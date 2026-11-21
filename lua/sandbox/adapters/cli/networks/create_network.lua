@@ -16,15 +16,11 @@ function Shared.new(bin)
 
   --- Create a new named network
   --- @param name string
+  --- @param on_done? fun(ok: boolean, err: string|nil) Optional: when given, runs asynchronously (with a
+  ---        progress indicator) and delivers exactly the values the synchronous form returns.
   --- @return boolean ok, string|nil err
-  function M.create_network(name)
-    local ok, output = run_argv.run_blocking_captured({ bin, "network", "create", name })
-
-    if not ok then
-      return false, output
-    end
-
-    return true, nil
+  function M.create_network(name, on_done)
+    return run_argv.captured({ bin, "network", "create", name }, run_argv.ok_or_err, on_done)
   end
 
   return M

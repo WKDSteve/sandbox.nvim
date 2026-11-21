@@ -7,16 +7,12 @@ local M = {}
 
 ---@param name string
 ---@param version 1|2
+--- @param on_done? fun(ok: boolean, err: string|nil) Optional: when given, runs asynchronously (with a
+---        progress indicator) and delivers exactly the values the synchronous form returns.
 ---@return boolean ok
 ---@return string|nil err
-function M.set_version_distro(name, version)
-  local ok, output = run_argv.run_blocking_captured({ "wsl", "--set-version", name, tostring(version) })
-
-  if not ok then
-    return false, output
-  end
-
-  return true, nil
+function M.set_version_distro(name, version, on_done)
+  return run_argv.captured({ "wsl", "--set-version", name, tostring(version) }, run_argv.ok_or_err, on_done)
 end
 
 return M

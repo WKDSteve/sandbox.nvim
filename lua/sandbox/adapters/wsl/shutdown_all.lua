@@ -6,16 +6,12 @@ local run_argv = require("sandbox.util.run_argv")
 
 local M = {}
 
+--- @param on_done? fun(ok: boolean, err: string|nil) Optional: when given, runs asynchronously (with a
+---        progress indicator) and delivers exactly the values the synchronous form returns.
 ---@return boolean ok
 ---@return string|nil err
-function M.shutdown_all()
-  local ok, output = run_argv.run_blocking_captured({ "wsl", "--shutdown" })
-
-  if not ok then
-    return false, output
-  end
-
-  return true, nil
+function M.shutdown_all(on_done)
+  return run_argv.captured({ "wsl", "--shutdown" }, run_argv.ok_or_err, on_done)
 end
 
 return M

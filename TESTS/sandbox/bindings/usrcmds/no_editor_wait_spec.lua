@@ -6,6 +6,11 @@
 -- stand-ins, the full daemon connect (380-640 ms) or seconds (`docker start`, a `wsl -d` that boots the distro) on a
 -- real machine, and forever on a hung daemon.
 --
+-- The second round (task `sandbox.nvim/restliche-blockierende-cli-aufrufe-und-erste`) covers the rest: image
+-- tag/save/load/history/inspect, volume and network create/inspect, network connect/disconnect, compose ps/logs,
+-- registry login, wsl set-default/set-version/export/import/shutdown-all, and the first engine detection of a session,
+-- which made every command wait for `podman version` (up to the 3 s probe timeout) until the engine was known.
+--
 -- The fake `vim.system` below is what makes "does not wait" checkable: its `wait()` throws, so any path that still
 -- waits fails, and it never exits by itself -- the test calls the exit callback by hand, which is the moment the
 -- command's answer may appear and not one tick before. Nothing real is started.
@@ -34,7 +39,7 @@ describe("user commands do not wait for the engine", function()
   local notices
   local views
   local config
-  local prev_style, prev_named
+  local prev_style, prev_named, prev_confirm
 
   --- The process of `spawned[i]` writes `out` and exits with `code`.
   ---@param i integer
@@ -106,16 +111,25 @@ describe("user commands do not wait for the engine", function()
       "image_list_view_podman",
       "volume_list_view",
       "network_list_view",
+      "log_view",
+      "inspect_view",
     }) do
-      package.loaded["sandbox.ui." .. view] = function(items)
-        views[#views + 1] = { view = view, items = items }
+      package.loaded["sandbox.ui." .. view] = function(items, title)
+        views[#views + 1] = { view = view, items = items, title = title }
       end
     end
+    package.loaded["sandbox.util.compose_file"] = {
+      find = function()
+        return "/proj/compose.yml"
+      end,
+    }
 
     config = require("sandbox.config")
     prev_style, prev_named = config.options.progress_style, config.engine_named
-    -- Headless and observable: no window, no toast.
+    prev_confirm = config.options.confirm_destructive
+    -- Headless and observable: no window, no toast, no confirmation dialog.
     config.options.progress_style = "statusline"
+    config.options.confirm_destructive = false
     config.engine_named = false
     vim.g.sandbox_engine = "docker"
   end)
@@ -124,6 +138,7 @@ describe("user commands do not wait for the engine", function()
     vim.system = real_system
     vim.g.sandbox_engine = nil
     config.options.progress_style = prev_style
+    config.options.confirm_destructive = prev_confirm
     config.engine_named = prev_named
     for name in pairs(package.loaded) do
       if is_plugin_module(name) then
@@ -183,6 +198,102 @@ describe("user commands do not wait for the engine", function()
         require("sandbox.bindings.usrcmds.wsl_commands").stop("sbx-wsl")
       end,
     },
+    {
+      name = "image tag",
+      argv = "docker tag alpine:edge sbx:t",
+      says = "Tagged: alpine:edge -> sbx:t",
+      run = function()
+        require("sandbox.bindings.usrcmds.image_commands").tag("alpine:edge", "sbx:t")
+      end,
+    },
+    {
+      name = "image save",
+      argv = "docker save -o sbx.tar alpine:edge",
+      says = "Image saved: alpine:edge -> sbx.tar",
+      run = function()
+        require("sandbox.bindings.usrcmds.image_commands").save("alpine:edge", "sbx.tar")
+      end,
+    },
+    {
+      name = "image load",
+      argv = "docker load -i sbx.tar",
+      says = "Image loaded from: sbx.tar",
+      run = function()
+        require("sandbox.bindings.usrcmds.image_commands").load("sbx.tar")
+      end,
+    },
+    {
+      name = "volume create",
+      argv = "docker volume create sbx-vol",
+      says = "Volume created: sbx-vol",
+      run = function()
+        require("sandbox.bindings.usrcmds.volume_commands").create("sbx-vol")
+      end,
+    },
+    {
+      name = "network create",
+      argv = "docker network create sbx-net",
+      says = "Network created: sbx-net",
+      run = function()
+        require("sandbox.bindings.usrcmds.network_commands").create("sbx-net")
+      end,
+    },
+    {
+      name = "network connect",
+      argv = "docker network connect sbx-net sbx-c",
+      says = "sbx-c",
+      run = function()
+        require("sandbox.bindings.usrcmds.network_commands").connect("sbx-net", "sbx-c")
+      end,
+    },
+    {
+      name = "network disconnect",
+      argv = "docker network disconnect sbx-net sbx-c",
+      says = "Disconnected sbx-c from network sbx-net",
+      run = function()
+        require("sandbox.bindings.usrcmds.network_commands").disconnect("sbx-net", "sbx-c")
+      end,
+    },
+    {
+      name = "wsl set-default",
+      argv = "wsl --set-default sbx-wsl",
+      says = "Default WSL distro set to: sbx-wsl",
+      run = function()
+        require("sandbox.bindings.usrcmds.wsl_commands").set_default("sbx-wsl")
+      end,
+    },
+    {
+      name = "wsl set-version",
+      argv = "wsl --set-version sbx-wsl 2",
+      says = "WSL distro sbx-wsl set to version 2",
+      run = function()
+        require("sandbox.bindings.usrcmds.wsl_commands").set_version("sbx-wsl", "2")
+      end,
+    },
+    {
+      name = "wsl export",
+      argv = "wsl --export sbx-wsl sbx.tar",
+      says = "WSL distro sbx-wsl exported to sbx.tar",
+      run = function()
+        require("sandbox.bindings.usrcmds.wsl_commands").export("sbx-wsl", "sbx.tar")
+      end,
+    },
+    {
+      name = "wsl import",
+      argv = "wsl --import sbx-new sbx-dir sbx.tar",
+      says = "WSL distro imported: sbx-new",
+      run = function()
+        require("sandbox.bindings.usrcmds.wsl_commands").import("sbx-new", "sbx-dir", "sbx.tar")
+      end,
+    },
+    {
+      name = "wsl shutdown-all",
+      argv = "wsl --shutdown",
+      says = "WSL shut down",
+      run = function()
+        require("sandbox.bindings.usrcmds.wsl_commands").shutdown_all()
+      end,
+    },
   }
 
   for _, case in ipairs(CASES) do
@@ -208,6 +319,114 @@ describe("user commands do not wait for the engine", function()
       return #notices > 0
     end)
     assert.is_true(noted("error", "No such container: sbx-db"), vim.inspect(notices))
+  end)
+
+  --- command, the argv it must start, the view it opens and the title it gives it
+  local VIEWS = {
+    {
+      name = "image history",
+      argv = "docker history alpine:edge",
+      view = "log_view",
+      title = "image-history/alpine:edge",
+      run = function()
+        require("sandbox.bindings.usrcmds.image_commands").history("alpine:edge")
+      end,
+    },
+    {
+      name = "image inspect",
+      argv = "docker inspect alpine:edge",
+      view = "inspect_view",
+      title = "image-alpine:edge",
+      run = function()
+        require("sandbox.bindings.usrcmds.image_commands").inspect("alpine:edge")
+      end,
+    },
+    {
+      name = "volume inspect",
+      argv = "docker volume inspect sbx-vol",
+      view = "inspect_view",
+      title = "volume-sbx-vol",
+      run = function()
+        require("sandbox.bindings.usrcmds.volume_commands").inspect("sbx-vol")
+      end,
+    },
+    {
+      name = "network inspect",
+      argv = "docker network inspect sbx-net",
+      view = "inspect_view",
+      title = "network-sbx-net",
+      run = function()
+        require("sandbox.bindings.usrcmds.network_commands").inspect("sbx-net")
+      end,
+    },
+    {
+      name = "compose ps",
+      argv = "docker compose -f /proj/compose.yml ps",
+      view = "log_view",
+      title = "compose-ps",
+      run = function()
+        require("sandbox.bindings.usrcmds.compose_commands").ps()
+      end,
+    },
+    {
+      name = "compose logs",
+      argv = "docker compose -f /proj/compose.yml logs",
+      view = "log_view",
+      title = "compose-logs",
+      run = function()
+        require("sandbox.bindings.usrcmds.compose_commands").logs()
+      end,
+    },
+  }
+
+  for _, case in ipairs(VIEWS) do
+    it(case.name .. " opens its view once the CLI answers, not before", function()
+      case.run()
+
+      assert.are.equal(1, #spawned)
+      assert.are.equal(case.argv, table.concat(spawned[1].cmd, " "))
+      assert.are.same({}, views)
+
+      exit(1, 0, '[{"Name":"sbx"}]\n')
+      settle(function()
+        return #views > 0
+      end)
+      assert.are.equal(case.view, views[1].view)
+      assert.are.equal(case.title, views[1].title)
+      assert.are.same({}, notices)
+    end)
+  end
+
+  it("compose logs reports the CLI's error when it fails", function()
+    require("sandbox.bindings.usrcmds.compose_commands").logs()
+    exit(1, 1, "no such service\n")
+    settle(function()
+      return #notices > 0
+    end)
+    assert.is_true(noted("error", "Failed to get compose logs"), vim.inspect(notices))
+    assert.are.same({}, views)
+  end)
+
+  it("registry login hands the password over stdin, never argv, and reports after the CLI exits", function()
+    local answers = { "sbx-user", "s3cret" }
+    package.loaded["ui.kit"] = {
+      input = function(opts)
+        opts.on_submit(table.remove(answers, 1))
+      end,
+    }
+    require("sandbox.bindings.usrcmds.registry_commands").login("ghcr.io")
+    package.loaded["ui.kit"] = nil
+
+    assert.are.equal(1, #spawned)
+    assert.are.equal("docker login --username sbx-user --password-stdin ghcr.io", table.concat(spawned[1].cmd, " "))
+    assert.are.equal("s3cret", spawned[1].opts.stdin)
+    assert.are.same({}, notices)
+
+    exit(1, 0)
+    settle(function()
+      return #notices > 0
+    end)
+    assert.is_true(noted("info", "Logged in to ghcr.io"), vim.inspect(notices))
   end)
 
   local LISTS = {

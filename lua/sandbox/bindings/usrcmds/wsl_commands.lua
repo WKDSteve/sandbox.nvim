@@ -109,13 +109,17 @@ function M.set_default(name)
 
   local wsl_engine = require("sandbox.adapters.wsl.engine")
   local usecase = require("sandbox.core.usecases.wsl.set_default_distro")
-  local ok, err = usecase(wsl_engine, name)
-  if not ok then
-    notify.error("Failed to set default WSL distro " .. name .. ": " .. friendly_error(err), { name = name, err = err })
-    return
-  end
+  usecase(wsl_engine, name, function(ok, err)
+    if not ok then
+      notify.error(
+        "Failed to set default WSL distro " .. name .. ": " .. friendly_error(err),
+        { name = name, err = err }
+      )
+      return
+    end
 
-  notify.info("Default WSL distro set to: " .. name)
+    notify.info("Default WSL distro set to: " .. name)
+  end)
 end
 
 --- Toggle a distro between WSL1/WSL2 (`wsl --set-version`)
@@ -131,13 +135,14 @@ function M.set_version(name, version)
 
   local wsl_engine = require("sandbox.adapters.wsl.engine")
   local usecase = require("sandbox.core.usecases.wsl.set_version_distro")
-  local ok, err = usecase(wsl_engine, name, version_num)
-  if not ok then
-    notify.error("Failed to set WSL version for " .. name .. ": " .. friendly_error(err), { name = name, err = err })
-    return
-  end
+  usecase(wsl_engine, name, version_num, function(ok, err)
+    if not ok then
+      notify.error("Failed to set WSL version for " .. name .. ": " .. friendly_error(err), { name = name, err = err })
+      return
+    end
 
-  notify.info("WSL distro " .. name .. " set to version " .. version)
+    notify.info("WSL distro " .. name .. " set to version " .. version)
+  end)
 end
 
 --- Open a shell or run a command inside a WSL distro
@@ -172,13 +177,14 @@ function M.export(name, path)
 
   local wsl_engine = require("sandbox.adapters.wsl.engine")
   local usecase = require("sandbox.core.usecases.wsl.export_distro")
-  local ok, err = usecase(wsl_engine, name, path)
-  if not ok then
-    notify.error("Failed to export WSL distro " .. name .. ": " .. friendly_error(err), { name = name, err = err })
-    return
-  end
+  usecase(wsl_engine, name, path, function(ok, err)
+    if not ok then
+      notify.error("Failed to export WSL distro " .. name .. ": " .. friendly_error(err), { name = name, err = err })
+      return
+    end
 
-  notify.info("WSL distro " .. name .. " exported to " .. path)
+    notify.info("WSL distro " .. name .. " exported to " .. path)
+  end)
 end
 
 --- Import a distro from a tarball (`wsl --import`)
@@ -193,13 +199,14 @@ function M.import(name, install_path, tar_path)
 
   local wsl_engine = require("sandbox.adapters.wsl.engine")
   local usecase = require("sandbox.core.usecases.wsl.import_distro")
-  local ok, err = usecase(wsl_engine, name, install_path, tar_path)
-  if not ok then
-    notify.error("Failed to import WSL distro " .. name .. ": " .. friendly_error(err), { name = name, err = err })
-    return
-  end
+  usecase(wsl_engine, name, install_path, tar_path, function(ok, err)
+    if not ok then
+      notify.error("Failed to import WSL distro " .. name .. ": " .. friendly_error(err), { name = name, err = err })
+      return
+    end
 
-  notify.info("WSL distro imported: " .. name)
+    notify.info("WSL distro imported: " .. name)
+  end)
 end
 
 --- Shut down the WSL2 VM and all running distros (`wsl --shutdown`),
@@ -208,13 +215,14 @@ function M.shutdown_all()
   confirm.destructive("Shut down WSL and all running distros?", function()
     local wsl_engine = require("sandbox.adapters.wsl.engine")
     local usecase = require("sandbox.core.usecases.wsl.shutdown_all")
-    local ok, err = usecase(wsl_engine)
-    if not ok then
-      notify.error("Failed to shut down WSL: " .. friendly_error(err), { err = err })
-      return
-    end
+    usecase(wsl_engine, function(ok, err)
+      if not ok then
+        notify.error("Failed to shut down WSL: " .. friendly_error(err), { err = err })
+        return
+      end
 
-    notify.info("WSL shut down")
+      notify.info("WSL shut down")
+    end)
   end)
 end
 

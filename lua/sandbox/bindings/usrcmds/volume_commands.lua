@@ -51,13 +51,14 @@ function M.create(name)
   end
 
   local usecase = require("sandbox.core.usecases.volumes.create_volume")
-  local ok, err = usecase(engine, name)
-  if not ok then
-    notify.error("Failed to create volume " .. name .. ": " .. friendly_error(err), { name = name, err = err })
-    return
-  end
+  usecase(engine, name, function(ok, err)
+    if not ok then
+      notify.error("Failed to create volume " .. name .. ": " .. friendly_error(err), { name = name, err = err })
+      return
+    end
 
-  notify.info("Volume created: " .. name)
+    notify.info("Volume created: " .. name)
+  end)
 end
 
 --- Remove a volume
@@ -101,13 +102,13 @@ function M.inspect(name)
   local usecase = require("sandbox.core.usecases.volumes.inspect_volume")
   local view = require("sandbox.ui.inspect_view")
 
-  local ok, result = pcall(usecase, engine, name)
+  -- pcall guards the call: an engine without the method throws synchronously (the port's stub).
+  local ok, err = pcall(usecase, engine, name, function(result)
+    view(result, "volume-" .. name)
+  end)
   if not ok then
-    notify.error("Failed to inspect volume " .. name .. ": " .. tostring(result), { name = name, err = result })
-    return
+    notify.error("Failed to inspect volume " .. name .. ": " .. tostring(err), { name = name, err = err })
   end
-
-  view(result, "volume-" .. name)
 end
 
 --- Remove all unused volumes

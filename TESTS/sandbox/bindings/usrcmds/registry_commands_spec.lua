@@ -51,9 +51,9 @@ describe("bindings.usrcmds.registry_commands.login", function()
 
   it("logs in with username and masked password submitted", function()
     local captured
-    package.loaded["sandbox.core.usecases.registry.login"] = function(engine, username, password, registry)
+    package.loaded["sandbox.core.usecases.registry.login"] = function(engine, username, password, registry, on_done)
       captured = { engine = engine, username = username, password = password, registry = registry }
-      return true
+      on_done(true)
     end
     local rc = require("sandbox.bindings.usrcmds.registry_commands")
 
@@ -82,8 +82,8 @@ describe("bindings.usrcmds.registry_commands.login", function()
       package.loaded["sandbox"].resolve_engine_name = function()
         return case.engine
       end
-      package.loaded["sandbox.core.usecases.registry.login"] = function()
-        return true
+      package.loaded["sandbox.core.usecases.registry.login"] = function(_, _, _, _, on_done)
+        on_done(true)
       end
       local rc = require("sandbox.bindings.usrcmds.registry_commands")
 
@@ -98,8 +98,8 @@ describe("bindings.usrcmds.registry_commands.login", function()
     package.loaded["sandbox"].resolve_engine_name = function()
       return "podman"
     end
-    package.loaded["sandbox.core.usecases.registry.login"] = function()
-      return true
+    package.loaded["sandbox.core.usecases.registry.login"] = function(_, _, _, _, on_done)
+      on_done(true)
     end
     local rc = require("sandbox.bindings.usrcmds.registry_commands")
 
@@ -110,8 +110,8 @@ describe("bindings.usrcmds.registry_commands.login", function()
   end)
 
   it("the password field is asked with secret = true", function()
-    package.loaded["sandbox.core.usecases.registry.login"] = function()
-      return true
+    package.loaded["sandbox.core.usecases.registry.login"] = function(_, _, _, _, on_done)
+      on_done(true)
     end
     local seen_opts = {}
     package.loaded["ui.kit"] = {
@@ -140,9 +140,9 @@ describe("bindings.usrcmds.registry_commands.login", function()
 
   it("empty username cancels before the password is ever asked", function()
     local usecase_called = false
-    package.loaded["sandbox.core.usecases.registry.login"] = function()
+    package.loaded["sandbox.core.usecases.registry.login"] = function(_, _, _, _, on_done)
       usecase_called = true
-      return true
+      on_done(true)
     end
     local rc = require("sandbox.bindings.usrcmds.registry_commands")
 
@@ -156,9 +156,9 @@ describe("bindings.usrcmds.registry_commands.login", function()
 
   it("<Esc> on the password field cancels without running", function()
     local usecase_called = false
-    package.loaded["sandbox.core.usecases.registry.login"] = function()
+    package.loaded["sandbox.core.usecases.registry.login"] = function(_, _, _, _, on_done)
       usecase_called = true
-      return true
+      on_done(true)
     end
     local rc = require("sandbox.bindings.usrcmds.registry_commands")
 
@@ -171,9 +171,9 @@ describe("bindings.usrcmds.registry_commands.login", function()
 
   it("an empty password (bare <CR>) cancels without running", function()
     local usecase_called = false
-    package.loaded["sandbox.core.usecases.registry.login"] = function()
+    package.loaded["sandbox.core.usecases.registry.login"] = function(_, _, _, _, on_done)
       usecase_called = true
-      return true
+      on_done(true)
     end
     local rc = require("sandbox.bindings.usrcmds.registry_commands")
 
@@ -185,8 +185,8 @@ describe("bindings.usrcmds.registry_commands.login", function()
   end)
 
   it("reports a usecase failure via notify.error", function()
-    package.loaded["sandbox.core.usecases.registry.login"] = function()
-      return false, "cannot connect to the Docker daemon"
+    package.loaded["sandbox.core.usecases.registry.login"] = function(_, _, _, _, on_done)
+      on_done(false, "cannot connect to the Docker daemon")
     end
     local rc = require("sandbox.bindings.usrcmds.registry_commands")
 

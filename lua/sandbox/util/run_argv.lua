@@ -121,9 +121,12 @@ end
 --- (JSON lines), where a daemon warning on stderr would otherwise turn into a
 --- parse error. A failed command still reports both streams -- the error is
 --- on stderr.
+--- `opts.input` is written to the command's stdin, which is then closed, as
+--- `run_blocking_captured`'s second argument does (`registry login`'s
+--- `--password-stdin`: a secret never goes on the command line).
 --- @param cmd string[]
 --- @param on_done fun(ok: boolean, output: string, code: integer)
---- @param opts? { progress?: boolean, stdout_only?: boolean }
+--- @param opts? { progress?: boolean, stdout_only?: boolean, input?: string }
 --- @return table handle with a `:stop()` method
 function M.run_async_captured(cmd, on_done, opts)
   local chunks = {}
@@ -147,7 +150,7 @@ function M.run_async_captured(cmd, on_done, opts)
     progress = start_progress(cmd)
   end
 
-  local spawn_opts = { stdout = collect_stdout, stderr = collect }
+  local spawn_opts = { stdout = collect_stdout, stderr = collect, stdin = opts and opts.input or nil }
   if ok_env then
     spawn_opts = spawn_env.apply(spawn_opts)
   end
@@ -213,7 +216,8 @@ end
 --- @param cmd string[]
 --- @param finish fun(ok: boolean, output: string): ...
 --- @param on_done? fun(...)
---- @param opts? { progress?: boolean, stdout_only?: boolean } forwarded to `run_async_captured`
+--- @param opts? { progress?: boolean, stdout_only?: boolean, input?: string } forwarded to `run_async_captured`;
+---        `input` (stdin) reaches the blocking path too
 --- @return ...
 function M.captured(cmd, finish, on_done, opts)
   if on_done then
@@ -222,7 +226,7 @@ function M.captured(cmd, finish, on_done, opts)
     end, opts)
     return
   end
-  return finish(M.run_blocking_captured(cmd))
+  return finish(M.run_blocking_captured(cmd, opts and opts.input))
 end
 
 --- The `finish` of a command whose only answer is success or failure:

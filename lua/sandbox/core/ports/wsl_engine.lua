@@ -27,27 +27,31 @@ return {
     error(name .. ": exec_in_distro not implemented. Command: " .. vim.inspect(command))
   end,
   --- @param name string
+  --- @param _on_done? fun(ok: boolean, err: string|nil) runs asynchronously when given
   --- @return boolean ok, string|nil err
-  set_default_distro = function(name)
+  set_default_distro = function(name, _on_done)
     error(name .. ": set_default_distro not implemented")
   end,
   --- @param name string
   --- @param version integer 1 or 2
+  --- @param _on_done? fun(ok: boolean, err: string|nil) runs asynchronously when given
   --- @return boolean ok, string|nil err
-  set_version_distro = function(name, version)
+  set_version_distro = function(name, version, _on_done)
     error(name .. ": set_version_distro not implemented. version: " .. tostring(version))
   end,
   --- @param name string
   --- @param path string destination .tar file path
+  --- @param _on_done? fun(ok: boolean, err: string|nil) runs asynchronously when given
   --- @return boolean ok, string|nil err
-  export_distro = function(name, path)
+  export_distro = function(name, path, _on_done)
     error(name .. ": export_distro not implemented. path: " .. tostring(path))
   end,
   --- @param name string new distro name
   --- @param install_path string directory the distro's VHD will be installed into
   --- @param tar_path string source .tar file path
+  --- @param _on_done? fun(ok: boolean, err: string|nil) runs asynchronously when given
   --- @return boolean ok, string|nil err
-  import_distro = function(name, install_path, tar_path)
+  import_distro = function(name, install_path, tar_path, _on_done)
     error(
       name
         .. ": import_distro not implemented. install_path: "
@@ -56,8 +60,9 @@ return {
         .. tostring(tar_path)
     )
   end,
+  --- @param _on_done? fun(ok: boolean, err: string|nil) runs asynchronously when given
   --- @return boolean ok, string|nil err
-  shutdown_all = function()
+  shutdown_all = function(_on_done)
     error("shutdown_all not implemented")
   end,
 }

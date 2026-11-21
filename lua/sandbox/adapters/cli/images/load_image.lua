@@ -16,15 +16,11 @@ function Shared.new(bin)
 
   --- Load (import) an image from a tarball on disk
   --- @param path string: tarball path
+  --- @param on_done? fun(ok: boolean, err: string|nil) Optional: when given, runs asynchronously (with a
+  ---        progress indicator) and delivers exactly the values the synchronous form returns.
   --- @return boolean ok, string|nil err
-  function M.load_image(path)
-    local ok, output = run_argv.run_blocking_captured({ bin, "load", "-i", path })
-
-    if not ok then
-      return false, output
-    end
-
-    return true, nil
+  function M.load_image(path, on_done)
+    return run_argv.captured({ bin, "load", "-i", path }, run_argv.ok_or_err, on_done)
   end
 
   return M

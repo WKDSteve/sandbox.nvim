@@ -99,14 +99,15 @@ function M.ps()
   end
 
   local usecase = require("sandbox.core.usecases.compose.ps")
-  local lines, err = usecase(engine, file)
-  if not lines then
-    notify.error("Failed to list compose services: " .. friendly_error(err), { file = file, err = err })
-    return
-  end
+  usecase(engine, file, function(lines, err)
+    if not lines then
+      notify.error("Failed to list compose services: " .. friendly_error(err), { file = file, err = err })
+      return
+    end
 
-  local view = require("sandbox.ui.log_view")
-  view(lines, "compose-ps")
+    local view = require("sandbox.ui.log_view")
+    view(lines, "compose-ps")
+  end)
 end
 
 --- List the services *declared* in the detected compose file -- a static
@@ -145,14 +146,15 @@ function M.logs()
   end
 
   local usecase = require("sandbox.core.usecases.compose.logs")
-  local lines, err = usecase(engine, file)
-  if not lines then
-    notify.error("Failed to get compose logs: " .. friendly_error(err), { file = file, err = err })
-    return
-  end
+  usecase(engine, file, function(lines, err)
+    if not lines then
+      notify.error("Failed to get compose logs: " .. friendly_error(err), { file = file, err = err })
+      return
+    end
 
-  local view = require("sandbox.ui.log_view")
-  view(lines, "compose-logs")
+    local view = require("sandbox.ui.log_view")
+    view(lines, "compose-logs")
+  end)
 end
 
 return M

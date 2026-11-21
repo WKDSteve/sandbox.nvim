@@ -59,13 +59,16 @@ function M.login(registry)
           end
 
           local usecase = require("sandbox.core.usecases.registry.login")
-          local ok, err = usecase(engine, username, password, registry)
-          if not ok then
-            notify.error("Registry login failed: " .. friendly_error(err), { registry = registry, err = err })
-            return
-          end
+          -- Asynchronous: the login is a round-trip to the registry (seconds on a slow one). The
+          -- password still goes by stdin, never on the command line.
+          usecase(engine, username, password, registry, function(ok, err)
+            if not ok then
+              notify.error("Registry login failed: " .. friendly_error(err), { registry = registry, err = err })
+              return
+            end
 
-          notify.info("Logged in to " .. registry_label(registry))
+            notify.info("Logged in to " .. registry_label(registry))
+          end)
         end,
         on_cancel = function()
           notify.warn("Login cancelled: no password given")

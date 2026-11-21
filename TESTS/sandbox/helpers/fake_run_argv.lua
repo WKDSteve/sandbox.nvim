@@ -48,8 +48,8 @@ function M.install(opts)
         record(cmd, input)
         return ok, output
       end,
-      run_async_captured = function(cmd, on_done)
-        record(cmd, nil)
+      run_async_captured = function(cmd, on_done, run_opts)
+        record(cmd, run_opts and run_opts.input)
         on_done(ok, output, code)
         return { stop = function() end }
       end,
@@ -57,14 +57,14 @@ function M.install(opts)
     -- The real module's two convenience functions, routed through the fakes
     -- above (they call their own module's runners, so they cannot be borrowed
     -- from the real table).
-    fake.captured = function(cmd, finish, on_done)
+    fake.captured = function(cmd, finish, on_done, run_opts)
       if on_done then
         fake.run_async_captured(cmd, function(o, out)
           on_done(finish(o, out))
-        end)
+        end, run_opts)
         return
       end
-      return finish(fake.run_blocking_captured(cmd))
+      return finish(fake.run_blocking_captured(cmd, run_opts and run_opts.input))
     end
     fake.ok_or_err = function(o, out)
       if not o then

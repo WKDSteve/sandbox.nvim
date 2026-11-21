@@ -23,13 +23,15 @@ return {
     error(file .. ": restart not implemented.")
   end,
   --- @param file string
+  --- @param _on_done? fun(lines: string[]|nil, err: string|nil) runs asynchronously when given
   --- @return string[]|nil lines, string|nil err
-  ps = function(file)
+  ps = function(file, _on_done)
     error(file .. ": ps not implemented.")
   end,
   --- @param file string
+  --- @param _on_done? fun(lines: string[]|nil, err: string|nil) runs asynchronously when given
   --- @return string[]|nil lines, string|nil err
-  logs = function(file)
+  logs = function(file, _on_done)
     error(file .. ": logs not implemented.")
   end,
 }

@@ -4,8 +4,9 @@
 --- @param username string
 --- @param password string
 --- @param registry? string
+--- @param on_done? fun(...) Optional: run asynchronously and deliver the result here instead of returning it
 --- @return boolean ok
 --- @return string|nil err
-return function(engine, username, password, registry)
-  return engine.login_registry(username, password, registry)
+return function(engine, username, password, registry, on_done)
+  return engine.login_registry(username, password, registry, on_done)
 end

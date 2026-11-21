@@ -7,16 +7,12 @@ local M = {}
 
 ---@param name string
 ---@param path string destination .tar file path
+--- @param on_done? fun(ok: boolean, err: string|nil) Optional: when given, runs asynchronously (with a
+---        progress indicator) and delivers exactly the values the synchronous form returns.
 ---@return boolean ok
 ---@return string|nil err
-function M.export_distro(name, path)
-  local ok, output = run_argv.run_blocking_captured({ "wsl", "--export", name, path })
-
-  if not ok then
-    return false, output
-  end
-
-  return true, nil
+function M.export_distro(name, path, on_done)
+  return run_argv.captured({ "wsl", "--export", name, path }, run_argv.ok_or_err, on_done)
 end
 
 return M

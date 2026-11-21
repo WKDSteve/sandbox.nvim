@@ -53,13 +53,14 @@ function M.create(name)
   end
 
   local usecase = require("sandbox.core.usecases.networks.create_network")
-  local ok, err = usecase(engine, name)
-  if not ok then
-    notify.error("Failed to create network " .. name .. ": " .. friendly_error(err), { name = name, err = err })
-    return
-  end
+  usecase(engine, name, function(ok, err)
+    if not ok then
+      notify.error("Failed to create network " .. name .. ": " .. friendly_error(err), { name = name, err = err })
+      return
+    end
 
-  notify.info("Network created: " .. name)
+    notify.info("Network created: " .. name)
+  end)
 end
 
 --- Remove a network
@@ -103,13 +104,13 @@ function M.inspect(name)
   local usecase = require("sandbox.core.usecases.networks.inspect_network")
   local view = require("sandbox.ui.inspect_view")
 
-  local ok, result = pcall(usecase, engine, name)
+  -- pcall guards the call: an engine without the method throws synchronously (the port's stub).
+  local ok, err = pcall(usecase, engine, name, function(result)
+    view(result, "network-" .. name)
+  end)
   if not ok then
-    notify.error("Failed to inspect network " .. name .. ": " .. tostring(result), { name = name, err = result })
-    return
+    notify.error("Failed to inspect network " .. name .. ": " .. tostring(err), { name = name, err = err })
   end
-
-  view(result, "network-" .. name)
 end
 
 --- Connect a container to a network
@@ -127,16 +128,17 @@ function M.connect(network, container_id)
   end
 
   local usecase = require("sandbox.core.usecases.networks.connect_network")
-  local ok, err = usecase(engine, network, container_id)
-  if not ok then
-    notify.error(
-      "Failed to connect " .. container_id .. " to " .. network .. ": " .. friendly_error(err),
-      { network = network, container_id = container_id, err = err }
-    )
-    return
-  end
+  usecase(engine, network, container_id, function(ok, err)
+    if not ok then
+      notify.error(
+        "Failed to connect " .. container_id .. " to " .. network .. ": " .. friendly_error(err),
+        { network = network, container_id = container_id, err = err }
+      )
+      return
+    end
 
-  notify.info("Connected " .. container_id .. " to network " .. network)
+    notify.info("Connected " .. container_id .. " to network " .. network)
+  end)
 end
 
 --- Disconnect a container from a network
@@ -154,16 +156,17 @@ function M.disconnect(network, container_id)
   end
 
   local usecase = require("sandbox.core.usecases.networks.disconnect_network")
-  local ok, err = usecase(engine, network, container_id)
-  if not ok then
-    notify.error(
-      "Failed to disconnect " .. container_id .. " from " .. network .. ": " .. friendly_error(err),
-      { network = network, container_id = container_id, err = err }
-    )
-    return
-  end
+  usecase(engine, network, container_id, function(ok, err)
+    if not ok then
+      notify.error(
+        "Failed to disconnect " .. container_id .. " from " .. network .. ": " .. friendly_error(err),
+        { network = network, container_id = container_id, err = err }
+      )
+      return
+    end
 
-  notify.info("Disconnected " .. container_id .. " from network " .. network)
+    notify.info("Disconnected " .. container_id .. " from network " .. network)
+  end)
 end
 
 --- Remove all unused networks

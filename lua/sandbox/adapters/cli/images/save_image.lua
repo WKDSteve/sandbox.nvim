@@ -17,15 +17,11 @@ function Shared.new(bin)
   --- Save (export) an image to a tarball on disk
   --- @param image string: image ID or repository:tag
   --- @param path string: destination tarball path
+  --- @param on_done? fun(ok: boolean, err: string|nil) Optional: when given, runs asynchronously (with a
+  ---        progress indicator) and delivers exactly the values the synchronous form returns.
   --- @return boolean ok, string|nil err
-  function M.save_image(image, path)
-    local ok, output = run_argv.run_blocking_captured({ bin, "save", "-o", path, image })
-
-    if not ok then
-      return false, output
-    end
-
-    return true, nil
+  function M.save_image(image, path, on_done)
+    return run_argv.captured({ bin, "save", "-o", path, image }, run_argv.ok_or_err, on_done)
   end
 
   return M

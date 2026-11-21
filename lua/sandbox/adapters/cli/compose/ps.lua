@@ -15,15 +15,16 @@ function Shared.new(bin)
   local M = {}
 
   --- @param file string path to the compose file
+  --- @param on_done? fun(lines: string[]|nil, err: string|nil) Optional: when given, runs asynchronously (with
+  ---        a progress indicator) and delivers exactly the values the synchronous form returns.
   --- @return string[]|nil lines, string|nil err
-  function M.ps(file)
-    local ok, output = run_argv.run_blocking_captured({ bin, "compose", "-f", file, "ps" })
-
-    if not ok then
-      return nil, output
-    end
-
-    return vim.split(output, "\n", { plain = true }), nil
+  function M.ps(file, on_done)
+    return run_argv.captured({ bin, "compose", "-f", file, "ps" }, function(ok, output)
+      if not ok then
+        return nil, output
+      end
+      return vim.split(output, "\n", { plain = true }), nil
+    end, on_done, { stdout_only = true })
   end
 
   return M

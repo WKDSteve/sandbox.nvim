@@ -144,8 +144,8 @@ function run_argv.run_blocking_captured(argv, input)
   local ok, out = _G.reply(argv)
   return ok, out
 end
-function run_argv.run_async_captured(argv, on_done)
-  record(argv, "async", nil)
+function run_argv.run_async_captured(argv, on_done, opts)
+  record(argv, "async", opts and opts.input)
   local ok, out, code = _G.reply(argv)
   vim.schedule(function()
     on_done(ok, out, code)
