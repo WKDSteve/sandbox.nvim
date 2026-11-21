@@ -154,13 +154,16 @@ function M.start(id)
   end
 
   local usecase = require("sandbox.core.usecases.containers.start_container")
-  local ok, err = usecase(engine, id)
-  if not ok then
-    notify.error("Failed to start container " .. id .. ": " .. friendly_error(err), { id = id, err = err })
-    return
-  end
+  -- Asynchronous: `start` returns once the container runs, which takes
+  -- seconds on a real daemon -- the editor must not wait for it.
+  usecase(engine, id, function(ok, err)
+    if not ok then
+      notify.error("Failed to start container " .. id .. ": " .. friendly_error(err), { id = id, err = err })
+      return
+    end
 
-  notify.info("Container started successfully: " .. id)
+    notify.info("Container started successfully: " .. id)
+  end)
 end
 
 --- Stop a running container
@@ -295,13 +298,15 @@ function M.rename(id, new_name)
   end
 
   local usecase = require("sandbox.core.usecases.containers.rename_container")
-  local ok, err = usecase(engine, id, new_name)
-  if not ok then
-    notify.error("Failed to rename container " .. id .. ": " .. friendly_error(err), { id = id, err = err })
-    return
-  end
+  -- Asynchronous: even a rename is a full daemon round-trip.
+  usecase(engine, id, new_name, function(ok, err)
+    if not ok then
+      notify.error("Failed to rename container " .. id .. ": " .. friendly_error(err), { id = id, err = err })
+      return
+    end
 
-  notify.info("Container renamed: " .. id .. " -> " .. new_name)
+    notify.info("Container renamed: " .. id .. " -> " .. new_name)
+  end)
 end
 
 --- Show a one-shot CPU/memory/network/block-IO snapshot of a container
@@ -377,16 +382,18 @@ function M.cp(src, dest)
   end
 
   local usecase = require("sandbox.core.usecases.containers.cp_container")
-  local ok, err = usecase(engine, src, dest)
-  if not ok then
-    notify.error(
-      "Failed to copy " .. src .. " -> " .. dest .. ": " .. friendly_error(err),
-      { src = src, dest = dest, err = err }
-    )
-    return
-  end
+  -- Asynchronous: a copy lasts as long as the tree is large.
+  usecase(engine, src, dest, function(ok, err)
+    if not ok then
+      notify.error(
+        "Failed to copy " .. src .. " -> " .. dest .. ": " .. friendly_error(err),
+        { src = src, dest = dest, err = err }
+      )
+      return
+    end
 
-  notify.info("Copied: " .. src .. " -> " .. dest)
+    notify.info("Copied: " .. src .. " -> " .. dest)
+  end)
 end
 
 --- Interactively create and start a new container: prompts for image, name,

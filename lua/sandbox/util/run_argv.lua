@@ -116,12 +116,18 @@ end
 --- callers - the statusline component refreshing itself every few seconds -
 --- where an indicator would be permanent noise rather than information. Every
 --- user-initiated command should leave it on.
+--- `opts.stdout_only = true` hands a *successful* command's stdout alone to
+--- `on_done`, as `run_blocking_captured` does: for output that is parsed
+--- (JSON lines), where a daemon warning on stderr would otherwise turn into a
+--- parse error. A failed command still reports both streams -- the error is
+--- on stderr.
 --- @param cmd string[]
 --- @param on_done fun(ok: boolean, output: string, code: integer)
---- @param opts? { progress?: boolean }
+--- @param opts? { progress?: boolean, stdout_only?: boolean }
 --- @return table handle with a `:stop()` method
 function M.run_async_captured(cmd, on_done, opts)
   local chunks = {}
+  local out_chunks = {}
 
   local function collect(_, data)
     if data and data ~= "" then
@@ -129,12 +135,19 @@ function M.run_async_captured(cmd, on_done, opts)
     end
   end
 
+  local function collect_stdout(err, data)
+    if data and data ~= "" then
+      out_chunks[#out_chunks + 1] = data
+    end
+    collect(err, data)
+  end
+
   local progress = nil
   if not (opts and opts.progress == false) then
     progress = start_progress(cmd)
   end
 
-  local spawn_opts = { stdout = collect, stderr = collect }
+  local spawn_opts = { stdout = collect_stdout, stderr = collect }
   if ok_env then
     spawn_opts = spawn_env.apply(spawn_opts)
   end
@@ -152,7 +165,8 @@ function M.run_async_captured(cmd, on_done, opts)
           progress:finish(progress_label(cmd) .. " failed (exit " .. tostring(obj.code) .. ")")
         end
       end
-      on_done(obj.code == 0, normalize_eol(table.concat(chunks)), obj.code)
+      local picked = (obj.code == 0 and opts and opts.stdout_only) and out_chunks or chunks
+      on_done(obj.code == 0, normalize_eol(table.concat(picked)), obj.code)
     end)
   end)
 
@@ -180,6 +194,47 @@ function M.run_async_captured(cmd, on_done, opts)
   end
 
   return { stop = stop }
+end
+
+--- One adapter body for both calling conventions: run `cmd`, hand
+--- `(ok, output)` to `finish`, and deliver what `finish` returns.
+---
+--- Without `on_done` this is the synchronous contract the adapters always had
+--- (`finish`'s values are returned). With it, the command runs through
+--- `run_async_captured` -- progress indicator included -- and `finish`'s
+--- values go to `on_done` instead; nothing is returned then. The parsing in
+--- `finish` is shared, so the two paths cannot drift apart.
+---
+--- This is what lets a user command stop freezing the editor for the whole
+--- daemon round-trip (380-640 ms per call measured, seconds for a `docker
+--- start` or a `wsl -d <distro>` that boots the distro) while callers that
+--- need the value right away -- `<Tab>` completion -- keep calling without a
+--- callback.
+--- @param cmd string[]
+--- @param finish fun(ok: boolean, output: string): ...
+--- @param on_done? fun(...)
+--- @param opts? { progress?: boolean, stdout_only?: boolean } forwarded to `run_async_captured`
+--- @return ...
+function M.captured(cmd, finish, on_done, opts)
+  if on_done then
+    M.run_async_captured(cmd, function(ok, output)
+      on_done(finish(ok, output))
+    end, opts)
+    return
+  end
+  return finish(M.run_blocking_captured(cmd))
+end
+
+--- The `finish` of a command whose only answer is success or failure:
+--- `true, nil` on exit 0, otherwise `false` and the command's output.
+--- @param ok boolean
+--- @param output string
+--- @return boolean ok, string|nil err
+function M.ok_or_err(ok, output)
+  if not ok then
+    return false, output
+  end
+  return true, nil
 end
 
 return M

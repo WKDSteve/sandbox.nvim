@@ -72,9 +72,9 @@ local SAME = {
 
 ---{ the `:Sandbox wsl` command, the argv wsl.exe must see, how it is run, the buffer it leaves focused }
 local WSL = {
-  { "wsl list", "wsl --list --verbose", "blocking", "sandbox.nvim://wsl-list" },
-  { "wsl start sbx-wsl", "wsl -d sbx-wsl -- echo", "blocking" },
-  { "wsl stop sbx-wsl", "wsl --terminate sbx-wsl", "blocking" },
+  { "wsl list", "wsl --list --verbose", "async", "sandbox.nvim://wsl-list" },
+  { "wsl start sbx-wsl", "wsl -d sbx-wsl -- echo", "async" },
+  { "wsl stop sbx-wsl", "wsl --terminate sbx-wsl", "async" },
   { "wsl exec sbx-wsl echo hello", "wsl -d sbx-wsl -- echo hello", "term", "sandbox.nvim://wsl/sbx-wsl" },
   { "wsl set-default sbx-wsl", "wsl --set-default sbx-wsl", "blocking" },
   { "wsl set-version sbx-wsl 1", "wsl --set-version sbx-wsl 1", "blocking" },

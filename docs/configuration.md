@@ -86,7 +86,7 @@ after a remap.
 
 | Key | Type | Default | What it does |
 |---|---|---|---|
-| `progress_style` | `"auto"\|"notify"\|"statusline"\|"fidget"\|"float"\|"kit"` | `"auto"` | Indicator while `pull`/`push`/`build`/`compose`/`prune` run |
+| `progress_style` | `"auto"\|"notify"\|"statusline"\|"fidget"\|"float"\|"kit"` | `"auto"` | Indicator while a command waits for the engine: `pull`/`push`/`build`/`compose`/`prune`, container `start`/`rename`/`cp`, the image/volume/network lists, `registry logout`, `wsl list`/`start`/`stop` |
 | `hover` | `boolean` | `true` | Register the request-only image preview with [hover.nvim](https://github.com/WKDSteve/hover.nvim) |
 
 `progress_style` needs [lib.nvim](https://github.com/WKDSteve/lib.nvim) and

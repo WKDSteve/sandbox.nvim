@@ -16,15 +16,12 @@ function Shared.new(bin)
 
   --- Start a specific container
   --- @param container_id string: ID or name of the container to start
+  --- @param on_done? fun(ok: boolean, err: string|nil) Optional: when given, runs asynchronously (with a
+  ---        progress indicator) and delivers exactly the values the synchronous form returns. `start` waits until
+  ---        the container runs, which can take seconds -- the user command always passes it.
   --- @return boolean ok, string|nil err
-  function M.start_container(container_id)
-    local ok, output = run_argv.run_blocking_captured({ bin, "start", container_id })
-
-    if not ok then
-      return false, output
-    end
-
-    return true, nil
+  function M.start_container(container_id, on_done)
+    return run_argv.captured({ bin, "start", container_id }, run_argv.ok_or_err, on_done)
   end
 
   return M

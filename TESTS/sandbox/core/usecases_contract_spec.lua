@@ -27,7 +27,7 @@ local CONTRACT = {
   ["compose.restart"] = { method = "restart", args = { "file", "on_done" }, engine = "compose" },
   ["compose.up"] = { method = "up", args = { "file", "on_done" }, engine = "compose" },
 
-  ["containers.cp_container"] = { method = "cp_container", args = { "src", "dest" } },
+  ["containers.cp_container"] = { method = "cp_container", args = { "src", "dest", "on_done" } },
   ["containers.exec_in_container"] = { method = "exec_in_container", args = { "id", "shell_cmd", "workdir", "opts" } },
   ["containers.get_container_logs"] = { method = "get_logs", args = { "id", "on_done" } },
   ["containers.inspect_container"] = { method = "inspect_container", args = { "id", "on_done" } },
@@ -36,11 +36,11 @@ local CONTRACT = {
   ["containers.pause_container"] = { method = "pause_container", args = { "id", "on_done" } },
   ["containers.prune_containers"] = { method = "prune_containers", args = { "on_done" } },
   ["containers.remove_container"] = { method = "remove_container", args = { "id", "on_done" } },
-  ["containers.rename_container"] = { method = "rename_container", args = { "id", "new_name" } },
+  ["containers.rename_container"] = { method = "rename_container", args = { "id", "new_name", "on_done" } },
   ["containers.restart_container"] = { method = "restart_container", args = { "id", "on_done" } },
   ["containers.run_container"] = { method = "run_container", args = { "opts", "on_done" } },
   ["containers.run_once"] = { method = "run_once", args = { "opts", "on_line", "on_exit" } },
-  ["containers.start_container"] = { method = "start_container", args = { "id" } },
+  ["containers.start_container"] = { method = "start_container", args = { "id", "on_done" } },
   ["containers.stats_container"] = { method = "stats_container", args = { "id", "on_done" } },
   ["containers.stop_container"] = { method = "stop_container", args = { "id", "on_done" } },
   ["containers.top_container"] = { method = "top_container", args = { "id", "on_done" } },
@@ -48,7 +48,7 @@ local CONTRACT = {
 
   ["images.history_image"] = { method = "history_image", args = { "image" } },
   ["images.inspect_image"] = { method = "inspect_image", args = { "image" } },
-  ["images.list_images"] = { method = "list_images", args = {} },
+  ["images.list_images"] = { method = "list_images", args = { "on_done" } },
   ["images.load_image"] = { method = "load_image", args = { "path" } },
   ["images.prune_images"] = { method = "prune_images", args = { "on_done" } },
   ["images.pull_image"] = { method = "pull_image", args = { "name", "on_done" } },
@@ -61,16 +61,16 @@ local CONTRACT = {
   ["networks.create_network"] = { method = "create_network", args = { "name" } },
   ["networks.disconnect_network"] = { method = "disconnect_network", args = { "network", "id" } },
   ["networks.inspect_network"] = { method = "inspect_network", args = { "name" } },
-  ["networks.list_networks"] = { method = "list_networks", args = {} },
+  ["networks.list_networks"] = { method = "list_networks", args = { "on_done" } },
   ["networks.prune_networks"] = { method = "prune_networks", args = { "on_done" } },
   ["networks.remove_network"] = { method = "remove_network", args = { "name", "on_done" } },
 
   ["registry.login"] = { method = "login_registry", args = { "username", "password", "registry" } },
-  ["registry.logout"] = { method = "logout_registry", args = { "registry" } },
+  ["registry.logout"] = { method = "logout_registry", args = { "registry", "on_done" } },
 
   ["volumes.create_volume"] = { method = "create_volume", args = { "name" } },
   ["volumes.inspect_volume"] = { method = "inspect_volume", args = { "name" } },
-  ["volumes.list_volumes"] = { method = "list_volumes", args = {} },
+  ["volumes.list_volumes"] = { method = "list_volumes", args = { "on_done" } },
   ["volumes.prune_volumes"] = { method = "prune_volumes", args = { "on_done" } },
   ["volumes.remove_volume"] = { method = "remove_volume", args = { "name", "on_done" } },
 
@@ -81,12 +81,12 @@ local CONTRACT = {
     args = { "name", "install_path", "tar_path" },
     engine = "wsl",
   },
-  ["wsl.list_distros"] = { method = "list_distros", args = {}, engine = "wsl" },
+  ["wsl.list_distros"] = { method = "list_distros", args = { "on_done" }, engine = "wsl" },
   ["wsl.set_default_distro"] = { method = "set_default_distro", args = { "name" }, engine = "wsl" },
   ["wsl.set_version_distro"] = { method = "set_version_distro", args = { "name", "version" }, engine = "wsl" },
   ["wsl.shutdown_all"] = { method = "shutdown_all", args = {}, engine = "wsl" },
-  ["wsl.start_distro"] = { method = "start_distro", args = { "name" }, engine = "wsl" },
-  ["wsl.stop_distro"] = { method = "stop_distro", args = { "name" }, engine = "wsl" },
+  ["wsl.start_distro"] = { method = "start_distro", args = { "name", "on_done" }, engine = "wsl" },
+  ["wsl.stop_distro"] = { method = "stop_distro", args = { "name", "on_done" }, engine = "wsl" },
 }
 
 -- `devcontainer.build` is the one use case with logic of its own; it has its

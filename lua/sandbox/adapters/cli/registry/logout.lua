@@ -15,20 +15,17 @@ function Shared.new(bin)
   local M = {}
 
   --- @param registry? string defaults to Docker Hub when omitted
+  --- @param on_done? fun(ok: boolean, err: string|nil) Optional: when given, runs asynchronously and delivers
+  ---        exactly the values the synchronous form returns.
   --- @return boolean ok
   --- @return string|nil err
-  function M.logout(registry)
+  function M.logout(registry, on_done)
     local args = { bin, "logout" }
     if registry and registry ~= "" then
       args[#args + 1] = registry
     end
 
-    local ok, output = run_argv.run_blocking_captured(args)
-    if not ok then
-      return false, output
-    end
-
-    return true, nil
+    return run_argv.captured(args, run_argv.ok_or_err, on_done)
   end
 
   return M

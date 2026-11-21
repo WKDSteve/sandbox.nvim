@@ -6,7 +6,7 @@
 
 ---{ the command after `:Sandbox `, the argv the engine must see, how it is run, the buffer it leaves focused }
 local C = {
-  { "image list", "docker images --format {{json .}}", "blocking", "sandbox.nvim://image-list" },
+  { "image list", "docker images --format {{json .}}", "async", "sandbox.nvim://image-list" },
   { "image pull alpine --buffer", "docker pull alpine", "term", "sandbox.nvim://term/pull/alpine" },
   { "image push alpine:edge", "docker push alpine:edge", "async" },
   { "image tag alpine:edge my/alpine:1", "docker tag alpine:edge my/alpine:1", "blocking" },
@@ -28,20 +28,20 @@ local C = {
   { "image remove alpine:edge", "docker rmi alpine:edge", "job" },
   { "image prune", "docker image prune -f", "async" },
   { "image prune -b", "docker image prune -f", "term", "sandbox.nvim://term/image-prune" },
-  { "volume list", "docker volume ls --format {{json .}}", "blocking", "sandbox.nvim://volume-list" },
+  { "volume list", "docker volume ls --format {{json .}}", "async", "sandbox.nvim://volume-list" },
   { "volume create sbx-vol", "docker volume create sbx-vol", "blocking" },
   { "volume inspect sbx-vol", "docker volume inspect sbx-vol", "blocking", "sandbox.nvim://inspect/volume-sbx-vol" },
   { "volume remove sbx-vol", "docker volume rm sbx-vol", "job" },
   { "volume prune", "docker volume prune -f", "async" },
-  { "network list", "docker network ls --format {{json .}}", "blocking", "sandbox.nvim://network-list" },
+  { "network list", "docker network ls --format {{json .}}", "async", "sandbox.nvim://network-list" },
   { "network create sbx-net", "docker network create sbx-net", "blocking" },
   { "network inspect sbx-net", "docker network inspect sbx-net", "blocking", "sandbox.nvim://inspect/network-sbx-net" },
   { "network connect sbx-net sbx-web", "docker network connect sbx-net sbx-web", "blocking" },
   { "network disconnect sbx-net sbx-web", "docker network disconnect sbx-net sbx-web", "blocking" },
   { "network remove sbx-net", "docker network rm sbx-net", "job" },
   { "network prune", "docker network prune -f", "async" },
-  { "registry logout", "docker logout", "blocking" },
-  { "registry logout ghcr.io", "docker logout ghcr.io", "blocking" },
+  { "registry logout", "docker logout", "async" },
+  { "registry logout ghcr.io", "docker logout ghcr.io", "async" },
 }
 
 local steps = {

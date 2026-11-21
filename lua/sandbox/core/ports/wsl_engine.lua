@@ -6,18 +6,21 @@
 --- do not share the same semantics as OCI containers (no images, no logs, no inspect).
 
 return {
+  --- @param _on_done? fun(distros: WslDistro[]|nil, err: string|nil) runs asynchronously when given
   --- @return WslDistro[]|nil distros, string|nil err
-  list_distros = function()
+  list_distros = function(_on_done)
     error("list_distros not implemented")
   end,
   --- @param name string
+  --- @param _on_done? fun(ok: boolean, err: string|nil) runs asynchronously when given
   --- @return boolean ok, string|nil err
-  start_distro = function(name)
+  start_distro = function(name, _on_done)
     error(name .. ": start_distro not implemented")
   end,
   --- @param name string
+  --- @param _on_done? fun(ok: boolean, err: string|nil) runs asynchronously when given
   --- @return boolean ok, string|nil err
-  stop_distro = function(name)
+  stop_distro = function(name, _on_done)
     error(name .. ": stop_distro not implemented")
   end,
   exec_in_distro = function(name, command)

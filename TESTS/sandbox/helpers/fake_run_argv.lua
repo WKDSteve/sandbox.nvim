@@ -43,7 +43,7 @@ function M.install(opts)
 
   package.loaded["sandbox.util.run_argv"] = nil
   package.preload["sandbox.util.run_argv"] = function()
-    return {
+    local fake = {
       run_blocking_captured = function(cmd, input)
         record(cmd, input)
         return ok, output
@@ -54,6 +54,25 @@ function M.install(opts)
         return { stop = function() end }
       end,
     }
+    -- The real module's two convenience functions, routed through the fakes
+    -- above (they call their own module's runners, so they cannot be borrowed
+    -- from the real table).
+    fake.captured = function(cmd, finish, on_done)
+      if on_done then
+        fake.run_async_captured(cmd, function(o, out)
+          on_done(finish(o, out))
+        end)
+        return
+      end
+      return finish(fake.run_blocking_captured(cmd))
+    end
+    fake.ok_or_err = function(o, out)
+      if not o then
+        return false, out
+      end
+      return true, nil
+    end
+    return fake
   end
 
   return state

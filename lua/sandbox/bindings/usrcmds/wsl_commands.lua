@@ -31,29 +31,31 @@ function M.list()
   local wsl_engine = require("sandbox.adapters.wsl.engine")
   local usecase = require("sandbox.core.usecases.wsl.list_distros")
 
-  local distros, err = usecase(wsl_engine)
-  if not distros then
-    notify.error("Failed to list WSL distros: " .. friendly_error(err), { err = err })
-    return
-  end
+  -- Asynchronous: `wsl.exe` answers slowly when the WSL service is cold.
+  usecase(wsl_engine, function(distros, err)
+    if not distros then
+      notify.error("Failed to list WSL distros: " .. friendly_error(err), { err = err })
+      return
+    end
 
-  -- Reuse the existing list_view pattern with a compatible shape
-  vim.cmd("vnew")
-  local buf = vim.api.nvim_get_current_buf()
-  vim.api.nvim_buf_set_name(buf, "sandbox.nvim://wsl-list")
+    -- Reuse the existing list_view pattern with a compatible shape
+    vim.cmd("vnew")
+    local buf = vim.api.nvim_get_current_buf()
+    vim.api.nvim_buf_set_name(buf, "sandbox.nvim://wsl-list")
 
-  local lines = { "NAME                    STATE       DEFAULT" }
-  lines[#lines + 1] = string.rep("-", 50)
+    local lines = { "NAME                    STATE       DEFAULT" }
+    lines[#lines + 1] = string.rep("-", 50)
 
-  for _, d in ipairs(distros) do
-    lines[#lines + 1] = string.format("%-23s %-11s %s", d.name, d.state, d.default and "*" or "")
-  end
+    for _, d in ipairs(distros) do
+      lines[#lines + 1] = string.format("%-23s %-11s %s", d.name, d.state, d.default and "*" or "")
+    end
 
-  vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
-  vim.bo[buf].modifiable = false
-  vim.bo[buf].buftype = "nofile"
-  vim.bo[buf].bufhidden = "wipe"
-  vim.bo[buf].filetype = "log"
+    vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
+    vim.bo[buf].modifiable = false
+    vim.bo[buf].buftype = "nofile"
+    vim.bo[buf].bufhidden = "wipe"
+    vim.bo[buf].filetype = "log"
+  end)
 end
 
 --- Start a WSL distro
@@ -66,13 +68,15 @@ function M.start(name)
 
   local wsl_engine = require("sandbox.adapters.wsl.engine")
   local usecase = require("sandbox.core.usecases.wsl.start_distro")
-  local ok, err = usecase(wsl_engine, name)
-  if not ok then
-    notify.error("Failed to start WSL distro " .. name .. ": " .. friendly_error(err), { name = name, err = err })
-    return
-  end
+  -- Asynchronous: starting a stopped distro boots it (seconds).
+  usecase(wsl_engine, name, function(ok, err)
+    if not ok then
+      notify.error("Failed to start WSL distro " .. name .. ": " .. friendly_error(err), { name = name, err = err })
+      return
+    end
 
-  notify.info("WSL distro started: " .. name)
+    notify.info("WSL distro started: " .. name)
+  end)
 end
 
 --- Stop (terminate) a WSL distro
@@ -85,13 +89,14 @@ function M.stop(name)
 
   local wsl_engine = require("sandbox.adapters.wsl.engine")
   local usecase = require("sandbox.core.usecases.wsl.stop_distro")
-  local ok, err = usecase(wsl_engine, name)
-  if not ok then
-    notify.error("Failed to stop WSL distro " .. name .. ": " .. friendly_error(err), { name = name, err = err })
-    return
-  end
+  usecase(wsl_engine, name, function(ok, err)
+    if not ok then
+      notify.error("Failed to stop WSL distro " .. name .. ": " .. friendly_error(err), { name = name, err = err })
+      return
+    end
 
-  notify.info("WSL distro terminated: " .. name)
+    notify.info("WSL distro terminated: " .. name)
+  end)
 end
 
 --- Set a distro as the WSL default (`wsl --set-default`)

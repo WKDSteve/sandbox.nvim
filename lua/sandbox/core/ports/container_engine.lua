@@ -12,7 +12,13 @@ return {
   -- `run_async_captured` and delivers the identical values to the callback.
   -- Those five are singled out because they are the ones long enough to be
   -- felt (100-500ms, more under Docker Desktop on Windows) -- the short
-  -- mutating calls stay synchronous.
+  -- mutating calls stay synchronous for callers that pass nothing.
+  --
+  -- The same optional `on_done` is accepted by the calls a user command waits
+  -- on: start/rename/cp, the image/volume/network lists and registry logout.
+  -- A `docker start` waits for the container to run, a `cp` for the copy --
+  -- seconds on a real daemon -- so the user commands pass it; `<Tab>`
+  -- completion cannot (it needs a return value) and does not.
   --- @param _on_done? fun(containers: table[]|nil, err: string|nil)
   --- @param _opts? { progress?: boolean } Only meaningful with _on_done.
   --- @return table[]|nil containers, string|nil err
@@ -46,8 +52,9 @@ return {
     error("run_once not implemented.")
   end,
   --- @param id string
+  --- @param _on_done? fun(ok: boolean, err: string|nil)
   --- @return boolean ok, string|nil err
-  start_container = function(id)
+  start_container = function(id, _on_done)
     error(id .. ": start_container not implemented.")
   end,
   --- @param id string
@@ -77,8 +84,9 @@ return {
   end,
   --- @param id string
   --- @param _new_name string
+  --- @param _on_done? fun(ok: boolean, err: string|nil)
   --- @return boolean ok, string|nil err
-  rename_container = function(id, _new_name)
+  rename_container = function(id, _new_name, _on_done)
     error(id .. ": rename_container not implemented.")
   end,
   --- @param id string
@@ -95,8 +103,9 @@ return {
   end,
   --- @param src string
   --- @param dest string
+  --- @param _on_done? fun(ok: boolean, err: string|nil)
   --- @return boolean ok, string|nil err
-  cp_container = function(src, dest)
+  cp_container = function(src, dest, _on_done)
     error("cp_container not implemented. " .. src .. " -> " .. dest)
   end,
   --- @param opts table
@@ -118,8 +127,9 @@ return {
   end,
 
   -- Image interfaces
+  --- @param _on_done? fun(images: table[]|nil, err: string|nil)
   --- @return table[]|nil images, string|nil err
-  list_images = function()
+  list_images = function(_on_done)
     error("list_images not implemented")
   end,
   --- Pull an image without blocking the UI thread.
@@ -153,8 +163,9 @@ return {
   end,
 
   -- Volume interfaces
+  --- @param _on_done? fun(volumes: table[]|nil, err: string|nil)
   --- @return table[]|nil volumes, string|nil err
-  list_volumes = function()
+  list_volumes = function(_on_done)
     error("list_volumes not implemented")
   end,
   --- @param name string
@@ -199,8 +210,9 @@ return {
   end,
 
   -- Network interfaces
+  --- @param _on_done? fun(networks: table[]|nil, err: string|nil)
   --- @return table[]|nil networks, string|nil err
-  list_networks = function()
+  list_networks = function(_on_done)
     error("list_networks not implemented")
   end,
   --- @param name string
@@ -245,8 +257,9 @@ return {
     error("login_registry not implemented. username: " .. username .. " registry: " .. tostring(registry))
   end,
   --- @param registry? string defaults to Docker Hub when omitted
+  --- @param _on_done? fun(ok: boolean, err: string|nil)
   --- @return boolean ok, string|nil err
-  logout_registry = function(registry)
+  logout_registry = function(registry, _on_done)
     error("logout_registry not implemented. registry: " .. tostring(registry))
   end,
 }

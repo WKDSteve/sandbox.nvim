@@ -20,18 +20,21 @@ function M.list()
   end
 
   local usecase = require("sandbox.core.usecases.volumes.list_volumes")
-  local volumes, err = usecase(engine)
-  if not volumes then
-    notify.error("Failed to list volumes: " .. friendly_error(err), { err = err })
-    return
-  end
+  -- Asynchronous: the list is a daemon round-trip the editor must not wait
+  -- for. `<Tab>` completion calls the same usecase without a callback.
+  usecase(engine, function(volumes, err)
+    if not volumes then
+      notify.error("Failed to list volumes: " .. friendly_error(err), { err = err })
+      return
+    end
 
-  if err then
-    notify.warn("Some volumes could not be parsed: " .. friendly_error(err), { err = err })
-  end
+    if err then
+      notify.warn("Some volumes could not be parsed: " .. friendly_error(err), { err = err })
+    end
 
-  local view = require("sandbox.ui.volume_list_view")
-  view(volumes)
+    local view = require("sandbox.ui.volume_list_view")
+    view(volumes)
+  end)
 end
 
 --- Create a new named volume

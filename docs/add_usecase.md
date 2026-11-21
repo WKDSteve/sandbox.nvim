@@ -81,6 +81,15 @@ string, and never a shell. Prefer `run_argv`: it is what the test suite fakes
 testable without a container engine installed, and it is where the completed
 spawn environment and the progress indicator are wired in.
 
+For a command a user waits on, take an optional `on_done` and use
+`run_argv.captured(argv, finish, on_done)`: `finish(ok, output)` parses, and
+its values are returned without `on_done` (for `<Tab>` completion, which needs
+a return value) or handed to `on_done` with it (for the user command, which
+must not freeze the editor for the daemon round-trip).
+`run_argv.ok_or_err` is the `finish` of a command that only succeeds or fails;
+pass `{ stdout_only = true }` as the fourth argument when the output is parsed,
+so a daemon warning on stderr does not turn into a parse error.
+
 Both `run_argv` entry points hand back the same bytes for the same command,
 line endings included — an adapter can share one parser between its blocking
 and its `on_done` path without the two disagreeing on Windows. That is not

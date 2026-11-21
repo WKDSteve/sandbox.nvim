@@ -17,15 +17,11 @@ function Shared.new(bin)
   --- Rename a specific container
   --- @param container_id string: ID or name of the container to rename
   --- @param new_name string: new name for the container
+  --- @param on_done? fun(ok: boolean, err: string|nil) Optional: when given, runs asynchronously and delivers
+  ---        exactly the values the synchronous form returns.
   --- @return boolean ok, string|nil err
-  function M.rename_container(container_id, new_name)
-    local ok, output = run_argv.run_blocking_captured({ bin, "rename", container_id, new_name })
-
-    if not ok then
-      return false, output
-    end
-
-    return true, nil
+  function M.rename_container(container_id, new_name, on_done)
+    return run_argv.captured({ bin, "rename", container_id, new_name }, run_argv.ok_or_err, on_done)
   end
 
   return M

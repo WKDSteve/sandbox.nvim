@@ -18,15 +18,12 @@ function Shared.new(bin)
   --- Either src or dest must be in "container:path" form, matching `docker cp`.
   --- @param src string
   --- @param dest string
+  --- @param on_done? fun(ok: boolean, err: string|nil) Optional: when given, runs asynchronously (with a
+  ---        progress indicator: a large tree takes a while) and delivers exactly the values the synchronous form
+  ---        returns.
   --- @return boolean ok, string|nil err
-  function M.cp_container(src, dest)
-    local ok, output = run_argv.run_blocking_captured({ bin, "cp", src, dest })
-
-    if not ok then
-      return false, output
-    end
-
-    return true, nil
+  function M.cp_container(src, dest, on_done)
+    return run_argv.captured({ bin, "cp", src, dest }, run_argv.ok_or_err, on_done)
   end
 
   return M

@@ -84,13 +84,15 @@ function M.logout(registry)
   end
 
   local usecase = require("sandbox.core.usecases.registry.logout")
-  local ok, err = usecase(engine, registry)
-  if not ok then
-    notify.error("Registry logout failed: " .. friendly_error(err), { registry = registry, err = err })
-    return
-  end
+  -- Asynchronous: logout talks to the credential helper and the daemon.
+  usecase(engine, registry, function(ok, err)
+    if not ok then
+      notify.error("Registry logout failed: " .. friendly_error(err), { registry = registry, err = err })
+      return
+    end
 
-  notify.info("Logged out of " .. registry_label(registry))
+    notify.info("Logged out of " .. registry_label(registry))
+  end)
 end
 
 return M

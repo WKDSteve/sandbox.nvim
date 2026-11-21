@@ -22,31 +22,34 @@ function M.list()
   end
 
   local usecase = require("sandbox.core.usecases.images.list_images")
-  local images, err = usecase(engine)
-  if not images then
-    notify.error("Failed to list images: " .. friendly_error(err), { err = err })
-    return
-  end
+  -- Asynchronous: the list is a daemon round-trip the editor must not wait
+  -- for. `<Tab>` completion calls the same usecase without a callback.
+  usecase(engine, function(images, err)
+    if not images then
+      notify.error("Failed to list images: " .. friendly_error(err), { err = err })
+      return
+    end
 
-  if err then
-    notify.warn("Some images could not be parsed: " .. friendly_error(err), { err = err })
-  end
+    if err then
+      notify.warn("Some images could not be parsed: " .. friendly_error(err), { err = err })
+    end
 
-  -- Match the same engine get_engine() actually resolved to (session
-  -- override/.sandboxrc/config), not just the static config value.
-  local resolved = sandbox.resolve_engine_name()
-  local view
-  if resolved == "docker" or resolved == "nerdctl" then
-    -- nerdctl's list_images output is docker-compatible JSON, same view works for both.
-    view = require("sandbox.ui.image_list_view_docker")
-  elseif resolved == "podman" then
-    view = require("sandbox.ui.image_list_view_podman")
-  else
-    notify.error("Unknown engine: " .. tostring(resolved))
-    return
-  end
+    -- Match the same engine get_engine() actually resolved to (session
+    -- override/.sandboxrc/config), not just the static config value.
+    local resolved = sandbox.resolve_engine_name()
+    local view
+    if resolved == "docker" or resolved == "nerdctl" then
+      -- nerdctl's list_images output is docker-compatible JSON, same view works for both.
+      view = require("sandbox.ui.image_list_view_docker")
+    elseif resolved == "podman" then
+      view = require("sandbox.ui.image_list_view_podman")
+    else
+      notify.error("Unknown engine: " .. tostring(resolved))
+      return
+    end
 
-  view(images)
+    view(images)
+  end)
 end
 
 --- Pull a specific image by name. Runs asynchronously so it doesn't block

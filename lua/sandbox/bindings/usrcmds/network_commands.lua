@@ -22,18 +22,21 @@ function M.list()
   end
 
   local usecase = require("sandbox.core.usecases.networks.list_networks")
-  local networks, err = usecase(engine)
-  if not networks then
-    notify.error("Failed to list networks: " .. friendly_error(err), { err = err })
-    return
-  end
+  -- Asynchronous: the list is a daemon round-trip the editor must not wait
+  -- for. `<Tab>` completion calls the same usecase without a callback.
+  usecase(engine, function(networks, err)
+    if not networks then
+      notify.error("Failed to list networks: " .. friendly_error(err), { err = err })
+      return
+    end
 
-  if err then
-    notify.warn("Some networks could not be parsed: " .. friendly_error(err), { err = err })
-  end
+    if err then
+      notify.warn("Some networks could not be parsed: " .. friendly_error(err), { err = err })
+    end
 
-  local view = require("sandbox.ui.network_list_view")
-  view(networks)
+    local view = require("sandbox.ui.network_list_view")
+    view(networks)
+  end)
 end
 
 --- Create a new named network
