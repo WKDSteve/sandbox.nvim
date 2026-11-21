@@ -1009,7 +1009,7 @@ local NO_ENGINE = { ["compose services"] = true }
 --- the config) the first `get_engine()` of a session asks the installed
 --- engines whether they answer (`podman version`): a process the editor
 --- waited for, up to the 3 s probe timeout on a hung daemon -- and every
---- command was that first one in turn. `resolve_engine_name_async` asks in the
+--- command was that first one in turn. `when_engine_known` asks in the
 --- background instead; a command typed while the probe runs joins it rather
 --- than starting a second one, and the handler's own `get_engine()` then reads
 --- the kept answer. Once the answer is known (or with a pinned engine) the
@@ -1022,7 +1022,7 @@ local function after_engine(routes)
     local run = route.run
     if type(run) == "function" and not NO_ENGINE[table.concat(route.path, " ")] then
       route.run = function(ctx)
-        require("sandbox").resolve_engine_name_async(function()
+        require("sandbox").when_engine_known(function()
           run(ctx)
         end)
       end

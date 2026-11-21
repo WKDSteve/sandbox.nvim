@@ -230,6 +230,35 @@ function M.get_live_engine()
   return M.get_engine()
 end
 
+--- Run, in the background, the probes `get_live_engine` would run, then call
+--- `on_done()`: the installed engines in preference order until one answers.
+--- Known answers cost nothing, so with all of them known `on_done` runs at
+--- once; a probe already running is joined. Unlike `get_live_engine_async` it
+--- reports nothing when no engine is installed -- the caller's own
+--- `get_live_engine` does, once.
+--- @param on_done fun()
+--- @return nil
+function M.when_probed(on_done)
+  local installed = M.installed()
+  local i = 0
+  local function next_engine()
+    i = i + 1
+    local name = installed[i]
+    if not name then
+      on_done()
+      return
+    end
+    M.probe(name, function(answer)
+      if answer then
+        on_done()
+      else
+        next_engine()
+      end
+    end)
+  end
+  next_engine()
+end
+
 --- `get_live_engine`'s answer when it needs no process: the name once every
 --- probe it would run has answered, nil while one is still unknown or running.
 ---

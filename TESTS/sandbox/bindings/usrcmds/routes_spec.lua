@@ -450,8 +450,8 @@ describe("bindings.usrcmds dispatch through the real composer", function()
         return { name = "fake" }
       end,
       -- engine routes run once the engine is known; here it always is
-      resolve_engine_name_async = function(on_done)
-        on_done("docker")
+      when_engine_known = function(on_done)
+        on_done()
       end,
     }
     require("sandbox.bindings.usrcmds").setup()
@@ -481,7 +481,7 @@ describe("bindings.usrcmds dispatch through the real composer", function()
   -- engine run at once.
   it("runs an engine route only once detection answered, the others at once", function()
     local pending = {}
-    package.loaded["sandbox"].resolve_engine_name_async = function(on_done)
+    package.loaded["sandbox"].when_engine_known = function(on_done)
       pending[#pending + 1] = on_done
     end
 
@@ -498,7 +498,7 @@ describe("bindings.usrcmds dispatch through the real composer", function()
     assert.are.equal(2, #pending)
 
     for _, on_done in ipairs(pending) do
-      on_done("podman")
+      on_done()
     end
     assert.are.equal("container_commands", last("list").module)
     assert.are.same({ "alpine", "sbx:t" }, last("tag").args)

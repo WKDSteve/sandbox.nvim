@@ -127,7 +127,7 @@ function M.status()
     -- a statusline must not hold the editor for it. Start it in the background
     -- -- a running probe is joined, not repeated -- and show what is cached; a
     -- redraw after it answered takes the normal path.
-    require("sandbox").resolve_engine_name_async(function() end)
+    require("sandbox").when_engine_known(function() end)
     return cache and cache.text or ""
   end
   local engine_name = ok_engine and current_engine or nil

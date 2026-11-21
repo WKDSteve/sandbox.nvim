@@ -28,8 +28,8 @@ describe("sandbox.statusline", function()
       peek_engine_name = function()
         return opts.engine_name
       end,
-      resolve_engine_name_async = function(on_done)
-        on_done(opts.engine_name)
+      when_engine_known = function(on_done)
+        on_done()
       end,
       get_engine = function()
         if opts.engine_name == nil then
@@ -159,7 +159,7 @@ describe("sandbox.statusline", function()
         asked_sync = asked_sync + 1
         return "podman"
       end,
-      resolve_engine_name_async = function(on_done)
+      when_engine_known = function(on_done)
         asked_async = asked_async + 1
         probe_done = on_done
       end,
@@ -180,7 +180,7 @@ describe("sandbox.statusline", function()
     assert.are.equal(0, listed)
 
     known = "podman"
-    probe_done("podman")
+    probe_done()
     assert.are.equal("podman (1/1)", statusline.status(), "a redraw after the answer takes the normal path")
   end)
 

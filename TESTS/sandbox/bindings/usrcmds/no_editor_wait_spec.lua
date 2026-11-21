@@ -530,6 +530,24 @@ describe("user commands do not wait for the engine", function()
       pcall(vim.api.nvim_del_user_command, "Sbx")
     end)
 
+    it("with no engine installed, a command reports it once, not once for the wait and once for the run", function()
+      utils.is_executable = function()
+        return false
+      end
+      require("sandbox.bindings.usrcmds").setup()
+      vim.cmd("Sandbox volume create sbx-vol")
+      pcall(vim.api.nvim_del_user_command, "Sandbox")
+      pcall(vim.api.nvim_del_user_command, "Sbx")
+
+      local errors = 0
+      for _, n in ipairs(notices) do
+        if n.level == "error" and n.msg:find("No supported container engine", 1, true) then
+          errors = errors + 1
+        end
+      end
+      assert.are.equal(1, errors, vim.inspect(notices))
+    end)
+
     it("the statusline does not wait for detection either", function()
       local statusline = require("sandbox.statusline")
       assert.are.equal("", statusline.status())

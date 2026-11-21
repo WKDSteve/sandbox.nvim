@@ -62,6 +62,17 @@ function M.resolve_engine_name()
   return require("sandbox.engine_utils").get_live_engine()
 end
 
+---@internal
+--- Whether the engine is named rather than detected: a session override, a
+--- `.sandboxrc`, or `engine =` in the config. A named engine is never probed.
+--- @return boolean
+local function pinned()
+  if vim.g.sandbox_engine or config.engine_named then
+    return true
+  end
+  return require("sandbox.util.project_config").read_engine_override() ~= nil
+end
+
 --- `M.resolve_engine_name` without the wait: the same precedence, the name
 --- delivered to `on_done(name)`. An override answers at once (synchronously);
 --- detection runs its liveness probes in the background
@@ -73,7 +84,7 @@ end
 --- @param on_done fun(name: Sandbox.Engine|nil)
 --- @return nil
 function M.resolve_engine_name_async(on_done)
-  if vim.g.sandbox_engine or config.engine_named or require("sandbox.util.project_config").read_engine_override() then
+  if pinned() then
     on_done(M.resolve_engine_name())
     return
   end
@@ -82,13 +93,32 @@ end
 
 --- `M.resolve_engine_name` when the answer needs no process: an override, or
 --- detection whose probes have answered. nil while detection still has to
---- ask an engine (`M.resolve_engine_name_async` asks it in the background).
+--- ask an engine (`M.when_engine_known` asks it in the background).
 --- @return Sandbox.Engine|nil
 function M.peek_engine_name()
-  if vim.g.sandbox_engine or config.engine_named or require("sandbox.util.project_config").read_engine_override() then
+  if pinned() then
     return M.resolve_engine_name()
   end
   return require("sandbox.engine_utils").peek_live_engine()
+end
+
+--- Call `on_done()` once `M.resolve_engine_name` can answer without a process:
+--- at once (synchronously) for a pinned engine or one detection already found,
+--- after the liveness probes in the background otherwise. A call while they
+--- run joins them.
+---
+--- For the callers that resolve the engine themselves right after (every
+--- `:Sandbox` engine route): unlike `M.resolve_engine_name_async` it reports
+--- nothing of its own, so "no engine found" reaches the user once, from the
+--- command that needed one.
+--- @param on_done fun()
+--- @return nil
+function M.when_engine_known(on_done)
+  if pinned() then
+    on_done()
+    return
+  end
+  require("sandbox.engine_utils").when_probed(on_done)
 end
 
 --- Get the active engine implementation
