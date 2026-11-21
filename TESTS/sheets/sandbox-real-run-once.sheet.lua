@@ -38,6 +38,9 @@ return {
     { wait = [[_G.result ~= nil and _G.result.cancelled == true]], note = "the exit is reported once, cancelled" },
     {
       wait = [[vim.fn.has("win32") == 1 or (_G.ran("docker", "kill sbx-once") and _G.ran("docker", "rm -f sbx-once"))]],
+      -- two stand-in processes have to start and append to the log; on a loaded hosted macOS runner the default
+      -- 2000 ms ran out once (2026-11-21, run 44893594424), the next attempt was green
+      timeout = 10000,
       note = "cancel kills and removes the container (the stand-in log is not read on Windows)",
     },
   },
