@@ -108,8 +108,15 @@ function M.responds(name)
   local ok, result = pcall(function()
     return vim.system({ name, "version" }, { text = true }):wait(PROBE_TIMEOUT_MS)
   end)
-  responds[name] = ok and type(result) == "table" and result.code == 0
-  return responds[name]
+  local answer = ok and type(result) == "table" and result.code == 0
+  if p then
+    -- A background probe whose spawn failed (no job, its `settle` still
+    -- scheduled): this answer settles it, so the scheduled failure arrives
+    -- for a probe that is no longer pending and cannot overwrite it.
+    settle(name, p, answer)
+  end
+  responds[name] = answer
+  return answer
 end
 
 --- `M.responds` without the wait: the same question, the same memo, the

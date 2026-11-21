@@ -101,7 +101,12 @@ describe("user commands do not wait for the engine", function()
         notices[#notices + 1] = { level = "error", msg = msg }
       end,
     }
-    for _, view in ipairs({ "image_list_view_docker", "volume_list_view", "network_list_view" }) do
+    for _, view in ipairs({
+      "image_list_view_docker",
+      "image_list_view_podman",
+      "volume_list_view",
+      "network_list_view",
+    }) do
       package.loaded["sandbox.ui." .. view] = function(items)
         views[#views + 1] = { view = view, items = items }
       end
@@ -238,6 +243,18 @@ describe("user commands do not wait for the engine", function()
     end)
   end
 
+  it("image list shows the view of the engine that ran it, even if the engine changes meanwhile", function()
+    require("sandbox.bindings.usrcmds.image_commands").list()
+    -- `:Sandbox engine set podman` while docker's answer is still on its way.
+    vim.g.sandbox_engine = "podman"
+
+    exit(1, 0, '{"ID":"x1","Repository":"alpine","Tag":"edge"}\n')
+    settle(function()
+      return #views > 0
+    end)
+    assert.are.equal("image_list_view_docker", views[1].view)
+  end)
+
   it("wsl list opens its buffer once wsl.exe answers, not before", function()
     require("sandbox.bindings.usrcmds.wsl_commands").list()
     local before = vim.api.nvim_get_current_buf()
@@ -350,6 +367,30 @@ describe("user commands do not wait for the engine", function()
         answers[#answers + 1] = a
       end)
       assert.are.equal(2, #spawned, "the forgotten answer must not be reused")
+    end)
+
+    it("a failed background spawn does not overwrite the answer a synchronous question found", function()
+      vim.system = function()
+        error("ENOENT: spawn failed", 0)
+      end
+      local answers = {}
+      utils.probe("podman", function(a)
+        answers[#answers + 1] = a
+      end)
+      -- Before the scheduled failure lands, the editor asks synchronously -- and this time the spawn works.
+      vim.system = function()
+        ---@diagnostic disable-next-line: return-type-mismatch
+        return {
+          wait = function()
+            return { code = 0 }
+          end,
+        }
+      end
+      assert.is_true(utils.responds("podman"))
+
+      vim.wait(50)
+      assert.is_true(utils.responds("podman"))
+      assert.are.same({ true }, answers)
     end)
 
     it("the synchronous question waits on a running probe rather than starting a second one", function()

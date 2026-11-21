@@ -21,6 +21,13 @@ function M.list()
     return
   end
 
+  -- Match the same engine get_engine() actually resolved to (session
+  -- override/.sandboxrc/config), not just the static config value -- and
+  -- resolve it now, with the engine that runs the list: the answer arrives
+  -- later, and an `:Sandbox engine set` in between must not hand docker's
+  -- images to the podman view.
+  local resolved = sandbox.resolve_engine_name()
+
   local usecase = require("sandbox.core.usecases.images.list_images")
   -- Asynchronous: the list is a daemon round-trip the editor must not wait
   -- for. `<Tab>` completion calls the same usecase without a callback.
@@ -34,9 +41,6 @@ function M.list()
       notify.warn("Some images could not be parsed: " .. friendly_error(err), { err = err })
     end
 
-    -- Match the same engine get_engine() actually resolved to (session
-    -- override/.sandboxrc/config), not just the static config value.
-    local resolved = sandbox.resolve_engine_name()
     local view
     if resolved == "docker" or resolved == "nerdctl" then
       -- nerdctl's list_images output is docker-compatible JSON, same view works for both.
