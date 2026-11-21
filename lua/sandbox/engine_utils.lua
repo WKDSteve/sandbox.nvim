@@ -24,6 +24,33 @@ local PROBE_TIMEOUT_MS = 3000
 ---@type table<string, boolean>
 local responds = {}
 
+--- Probes running in the background (`M.probe`), keyed by engine name: the
+--- process and the callbacks waiting for its answer.
+---@class Sandbox.Probe
+---@field job? vim.SystemObj
+---@field waiters fun(answer: boolean)[]
+
+---@type table<string, Sandbox.Probe>
+local pending = {}
+
+--- Record the answer of the probe `p` of `name` and hand it to its waiters --
+--- once, and only while `p` is still the pending probe of `name`. A probe that
+--- `M.forget()` orphaned, or that a synchronous `responds` already settled,
+--- arrives here a second time and is ignored.
+---@param name string
+---@param p Sandbox.Probe
+---@param answer boolean
+local function settle(name, p, answer)
+  if pending[name] ~= p then
+    return
+  end
+  pending[name] = nil
+  responds[name] = answer
+  for _, waiter in ipairs(p.waiters) do
+    waiter(answer)
+  end
+end
+
 --- Check if a command is available on the system.
 --- Delegates to lib.nvim.core.has_exec, which memoizes the result per binary
 --- name (this module's own version re-checked vim.fn.executable every call).
@@ -65,6 +92,19 @@ function M.responds(name)
     return false
   end
 
+  -- A background probe of the same engine is already running (`M.probe`):
+  -- wait for that process rather than starting a second one beside it.
+  local p = pending[name]
+  if p and p.job then
+    local ok, result = pcall(function()
+      return p.job:wait(PROBE_TIMEOUT_MS)
+    end)
+    settle(name, p, ok and type(result) == "table" and result.code == 0)
+    if responds[name] ~= nil then
+      return responds[name]
+    end
+  end
+
   local ok, result = pcall(function()
     return vim.system({ name, "version" }, { text = true }):wait(PROBE_TIMEOUT_MS)
   end)
@@ -72,13 +112,69 @@ function M.responds(name)
   return responds[name]
 end
 
+--- `M.responds` without the wait: the same question, the same memo, the
+--- answer delivered to `on_done(answer)`.
+---
+--- For the sites that only *show* the engine (`:Sandbox engine get`,
+--- `reset`): their whole job is that one probe, so the synchronous form froze
+--- the editor for the full connect (380-640 ms measured, up to
+--- `PROBE_TIMEOUT_MS` on a hung daemon). A known answer is delivered at once,
+--- synchronously; otherwise after the probe, on the main loop. Asking again
+--- while a probe runs joins it instead of starting another process, and a
+--- `M.forget()` in between makes the stale probe's answer go nowhere.
+---@param name string
+---@param on_done fun(answer: boolean)
+---@return nil
+function M.probe(name, on_done)
+  if responds[name] ~= nil then
+    on_done(responds[name])
+    return
+  end
+  if not M.is_executable(name) then
+    responds[name] = false
+    on_done(false)
+    return
+  end
+
+  local p = pending[name]
+  if p then
+    p.waiters[#p.waiters + 1] = on_done
+    return
+  end
+
+  p = { waiters = { on_done } }
+  pending[name] = p
+  local spawn_ok, job = pcall(
+    vim.system,
+    { name, "version" },
+    { text = true, timeout = PROBE_TIMEOUT_MS },
+    function(obj)
+      vim.schedule(function()
+        settle(name, p, obj.code == 0)
+      end)
+    end
+  )
+  if not spawn_ok then
+    -- `vim.system` throws synchronously when the spawn itself fails; the exit
+    -- callback would never run, so the waiters would wait forever.
+    vim.schedule(function()
+      settle(name, p, false)
+    end)
+    return
+  end
+  p.job = job
+end
+
 --- Forget every probe result, so the next question is asked afresh.
 ---
 --- For `:Sandbox engine reset` and for tests. Without it, starting your VM
 --- mid-session would leave the plugin on the answer cached before you did.
+--- A probe still running is orphaned: its answer is dropped, its waiters are
+--- not called (`settle` checks the probe is still the pending one).
 ---@return nil
 function M.forget()
   responds = {}
+  pending = {}
 end
 
 --- Every engine whose CLI is on `PATH`, in preference order.
@@ -125,6 +221,34 @@ function M.get_live_engine()
     end
   end
   return M.get_engine()
+end
+
+--- `M.get_live_engine` without the wait: the same pick, in the same
+--- preference order (one probe at a time, stopping at the first engine that
+--- answers -- no process is started for an engine the pick never reaches),
+--- delivered to `on_done(name)`. Synchronous when every answer needed is
+--- already known.
+---@param on_done fun(name: Sandbox.Engine)
+---@return nil
+function M.get_live_engine_async(on_done)
+  local installed = M.installed()
+  local i = 0
+  local function next_engine()
+    i = i + 1
+    local name = installed[i]
+    if not name then
+      on_done(M.get_engine())
+      return
+    end
+    M.probe(name, function(answer)
+      if answer then
+        on_done(name)
+      else
+        next_engine()
+      end
+    end)
+  end
+  next_engine()
 end
 
 return M

@@ -1,9 +1,10 @@
 -- The user commands that talk to a daemon must not make the editor wait for it.
 --
 -- Found by `testing perf` (2026-11-21, sandbox 1204 ms blocked over 46 starts): `:Sandbox container start`,
--- `rename`, `cp`, the image/volume/network lists, `registry logout` and `wsl list/start/stop` each started their CLI
--- and then sat in `vim.system(...):wait()` -- 60-200 ms with stand-ins, the full daemon connect (380-640 ms) or
--- seconds (`docker start`, a `wsl -d` that boots the distro) on a real machine, and forever on a hung daemon.
+-- `rename`, `cp`, the image/volume/network lists, `registry logout`, `wsl list/start/stop` and the engine probe of
+-- `:Sandbox engine get/reset` each started their CLI and then sat in `vim.system(...):wait()` -- 60-200 ms with
+-- stand-ins, the full daemon connect (380-640 ms) or seconds (`docker start`, a `wsl -d` that boots the distro) on a
+-- real machine, and forever on a hung daemon.
 --
 -- The fake `vim.system` below is what makes "does not wait" checkable: its `wait()` throws, so any path that still
 -- waits fails, and it never exits by itself -- the test calls the exit callback by hand, which is the moment the
@@ -250,5 +251,128 @@ describe("user commands do not wait for the engine", function()
     end)
     local text = table.concat(vim.api.nvim_buf_get_lines(0, 0, -1, false), "\n")
     assert.is_truthy(text:find("sbx-wsl", 1, true), text)
+  end)
+
+  describe("engine detection", function()
+    local utils
+
+    before_each(function()
+      vim.g.sandbox_engine = nil
+      package.loaded["sandbox.util.project_config"] = {
+        read_engine_override = function()
+          return nil, false
+        end,
+      }
+      utils = require("sandbox.engine_utils")
+      utils.is_executable = function(cmd)
+        return cmd == "podman" or cmd == "docker"
+      end
+    end)
+
+    it("engine get probes in the background and reports after the answer", function()
+      require("sandbox.bindings.usrcmds.engine_commands").get()
+
+      assert.are.equal(1, #spawned)
+      assert.are.equal("podman version", table.concat(spawned[1].cmd, " "))
+      assert.are.same({}, notices)
+
+      exit(1, 0)
+      settle(function()
+        return #notices > 0
+      end)
+      assert.is_true(noted("info", "Active engine: podman (detected)"), vim.inspect(notices))
+    end)
+
+    it("falls through to the next engine when the preferred one does not answer", function()
+      require("sandbox.bindings.usrcmds.engine_commands").get()
+      exit(1, 125)
+      settle(function()
+        return #spawned > 1
+      end)
+      assert.are.equal("docker version", table.concat(spawned[2].cmd, " "))
+      exit(2, 0)
+      settle(function()
+        return #notices > 0
+      end)
+      assert.is_true(noted("info", "Active engine: docker (detected)"), vim.inspect(notices))
+    end)
+
+    it("engine reset forgets, probes in the background, and reports after the answer", function()
+      utils.probe("podman", function() end)
+      exit(1, 0)
+      settle(function()
+        return utils.responds("podman") ~= nil
+      end)
+
+      require("sandbox.bindings.usrcmds.engine_commands").reset()
+      assert.are.equal(2, #spawned, "reset must ask afresh")
+      assert.are.same({}, notices)
+
+      exit(2, 0)
+      settle(function()
+        return #notices > 0
+      end)
+      assert.is_true(noted("info", "Session engine override cleared; using podman"), vim.inspect(notices))
+    end)
+
+    it("a second question while a probe runs joins it instead of starting another process", function()
+      local answers = {}
+      utils.probe("podman", function(a)
+        answers[#answers + 1] = a
+      end)
+      utils.probe("podman", function(a)
+        answers[#answers + 1] = a
+      end)
+      assert.are.equal(1, #spawned)
+
+      exit(1, 0)
+      settle(function()
+        return #answers == 2
+      end)
+      assert.are.same({ true, true }, answers)
+      -- Remembered: asking again starts nothing and answers at once.
+      assert.is_true(utils.responds("podman"))
+      assert.are.equal(1, #spawned)
+    end)
+
+    it("a probe orphaned by forget() answers nobody and leaves no memo", function()
+      local answers = {}
+      utils.probe("podman", function(a)
+        answers[#answers + 1] = a
+      end)
+      utils.forget()
+
+      exit(1, 0)
+      vim.wait(50)
+      assert.are.same({}, answers)
+
+      utils.probe("podman", function(a)
+        answers[#answers + 1] = a
+      end)
+      assert.are.equal(2, #spawned, "the forgotten answer must not be reused")
+    end)
+
+    it("the synchronous question waits on a running probe rather than starting a second one", function()
+      local job_waits = 0
+      vim.system = function(cmd, opts, on_exit)
+        spawned[#spawned + 1] = { cmd = cmd, opts = opts or {}, on_exit = on_exit }
+        ---@diagnostic disable-next-line: return-type-mismatch
+        return {
+          -- The probe's process has exited; `wait` hands back its result, as `vim.SystemObj:wait` does.
+          wait = function()
+            job_waits = job_waits + 1
+            return { code = 0 }
+          end,
+        }
+      end
+      utils.probe("podman", function() end)
+      vim.system = function()
+        error("a second process was started", 0)
+      end
+
+      assert.is_true(utils.responds("podman"))
+      assert.are.equal(1, job_waits)
+      assert.are.equal(1, #spawned)
+    end)
   end)
 end)

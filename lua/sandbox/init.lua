@@ -62,6 +62,24 @@ function M.resolve_engine_name()
   return require("sandbox.engine_utils").get_live_engine()
 end
 
+--- `M.resolve_engine_name` without the wait: the same precedence, the name
+--- delivered to `on_done(name)`. An override answers at once (synchronously);
+--- detection runs its liveness probes in the background
+--- (`engine_utils.get_live_engine_async`).
+---
+--- For the commands that only *report* the engine (`:Sandbox engine get`,
+--- `reset`): there the probe is the whole command, so the synchronous form held
+--- the editor for the full daemon connect.
+--- @param on_done fun(name: Sandbox.Engine|nil)
+--- @return nil
+function M.resolve_engine_name_async(on_done)
+  if vim.g.sandbox_engine or config.engine_named or require("sandbox.util.project_config").read_engine_override() then
+    on_done(M.resolve_engine_name())
+    return
+  end
+  require("sandbox.engine_utils").get_live_engine_async(on_done)
+end
+
 --- Get the active engine implementation
 --- @return table|nil
 function M.get_engine()

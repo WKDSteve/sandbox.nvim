@@ -58,11 +58,28 @@ end
 function M.reset()
   vim.g.sandbox_engine = nil
   require("sandbox.engine_utils").forget()
-  notify.info("Session engine override cleared; using " .. tostring(require("sandbox").resolve_engine_name()))
+  -- The fresh probe runs in the background: it is the whole cost of this
+  -- command, and the editor must not wait for a daemon connect to say so.
+  require("sandbox").resolve_engine_name_async(function()
+    -- Read back rather than trusting the callback's argument: an override
+    -- set while the probe ran (`:Sandbox engine set`) wins, and the probe's
+    -- answer is memoized by now, so this costs nothing.
+    notify.info("Session engine override cleared; using " .. tostring(require("sandbox").resolve_engine_name()))
+  end)
 end
 
 --- Show which engine is currently active and why.
+---
+--- Detection probes in the background; the report follows its answer.
 function M.get()
+  require("sandbox").resolve_engine_name_async(M.report)
+end
+
+--- Report the active engine and its source. Split from `M.get` so the report
+--- reads the state at the moment it is shown -- after the probe, so an
+--- override set in the meantime is what it names.
+---@internal
+function M.report()
   local name = require("sandbox").resolve_engine_name()
   -- An engine named in `setup` is the config's; otherwise it was detected (the first installed engine that answers).
   local source = require("sandbox.config").engine_named and "config" or "detected"

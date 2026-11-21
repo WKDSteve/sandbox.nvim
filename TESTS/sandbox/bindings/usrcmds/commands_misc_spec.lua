@@ -64,6 +64,12 @@ local function harness(opts)
     resolve_engine_name = function()
       return not opts.no_engine and "docker" or nil
     end,
+    -- Answers at once, as the real one does when the answer is known; read
+    -- through the table so a test that replaces `resolve_engine_name` is
+    -- seen here too.
+    resolve_engine_name_async = function(on_done)
+      on_done(package.loaded["sandbox"].resolve_engine_name())
+    end,
   }
 
   for _, view in ipairs({ "log_view", "inspect_view", "error_view" }) do
