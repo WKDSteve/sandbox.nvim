@@ -104,21 +104,7 @@ local function cached_names(key, fetch, to_name)
 end
 
 ---@internal
----@param list string[]
----@param arg_lead string
----@return string[]
-local function prefix(list, arg_lead)
-  if arg_lead == "" then
-    return list
-  end
-  local out = {}
-  for _, v in ipairs(list) do
-    if v:sub(1, #arg_lead) == arg_lead then
-      out[#out + 1] = v
-    end
-  end
-  return out
-end
+local prefix = require("lib.nvim.bindings.usercmd.prefix")
 
 -- `desc` of a custom type is the line lib.nvim's option float shows for every positional argument
 -- of that type that carries no text of its own (one per type, not one per route).
