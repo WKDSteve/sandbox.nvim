@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 // Claude Code PreToolUse hook (Bash): in a cloud session (CLAUDE_CODE_REMOTE is set) a `git push` that would move
-// `main` is refused with exit 2 (rule GIT-09: a cloud session pushes its own claude/... branch, a local session lands
-// it). Locally the settings entry does not even start node; run without CLAUDE_CODE_REMOTE, this script allows all.
-// It guards against mistakes, not intent: a session can edit .claude/ itself.
+// `main` is refused with exit 2: the maintainer's rule is that a cloud session pushes its own claude/... branch and a
+// local session lands it on main. Locally the settings entry does not even start node; run without CLAUDE_CODE_REMOTE,
+// this script allows all. It guards against mistakes, not intent: a session can edit .claude/ itself. The copy lives
+// in public repositories too, so it names no rule by the id of a private ruleset.
 //
 // Source of truth: $NVIM_CONFIG_DIR/docs/NOTES/CDX/hooks/cloud-push-guard.mjs, installed into a repository's
 // .claude/hooks/ by docs/NOTES/CDX/install-cloud-push-guard.js. Change it there, never in a repository's copy.
@@ -271,7 +272,7 @@ function main() {
   const why = verdict(command, input.cwd || process.env.CLAUDE_PROJECT_DIR || process.cwd(), 0);
   if (!why) return 0;
   process.stderr.write(
-    `cloud-push-guard (GIT-09): a cloud session never pushes to main (${why}). ` +
+    `cloud-push-guard: a cloud session never pushes to main (${why}). ` +
       'Push your own branch instead, e.g. `git push -u origin HEAD:claude/<topic>`; a local session lands it on main.\n',
   );
   return 2;
