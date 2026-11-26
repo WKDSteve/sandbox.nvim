@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "[ -z \"$CLAUDE_CODE_REMOTE\" ] || node \"$CLAUDE_PROJECT_DIR/.claude/hooks/cloud-push-guard.mjs\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}
