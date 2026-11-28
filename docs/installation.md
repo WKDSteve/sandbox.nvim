@@ -13,9 +13,7 @@
   `ui.contextmenu`/`ui.kit` (the right-click menu's item builders and
   renderer, plus `kit.input()`'s scripted prompts) are `require()`d
   unconditionally by `lua/sandbox/integrations/menu.lua` and
-  `lua/sandbox/ui/list_actions.lua`. [nvzone/menu](https://github.com/nvzone/menu)
-  below is a separate, genuinely optional choice of *renderer* for that
-  menu — `ui.kit.menu` draws it either way.
+  `lua/sandbox/ui/list_actions.lua`; `ui.kit.menu` draws the menu.
 - **A container engine on `PATH`, with its daemon running** — Podman, Docker
   or nerdctl. Detection prefers Podman, then Docker, then nerdctl, but skips
   any whose daemon does not answer: an installed engine with a stopped VM is
@@ -28,10 +26,6 @@ Optional:
 - [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim) — only for
   the picker extension (`:Telescope sandbox ...`). Everything else works
   without it.
-- [nvzone/menu](https://github.com/nvzone/menu) — preferred renderer for the
-  right-click context menu on the list-view buffers; `ui.kit.menu` draws it
-  otherwise, so the menu itself is not optional (see `ui.nvim` above), only
-  this specific look.
 - [hover.nvim](https://github.com/WKDSteve/hover.nvim) — an image
   reference under the cursor answers whether it is pulled, its size, and any
   containers from it. Registered request-only, so it never slows the

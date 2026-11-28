@@ -59,7 +59,6 @@ return {
     { expect = [[#_G.other_spawns == 0 or error(vim.inspect(_G.other_spawns))]], note = "no real process" },
   },
   manual = {
-    "<RightMouse> on a row of the container list: a context menu with the row's actions (ui.contextmenu; "
-      .. "nvzone/menu only changes how it is drawn)",
+    "<RightMouse> on a row of the container list: a context menu with the row's actions (ui.contextmenu)",
   },
 }

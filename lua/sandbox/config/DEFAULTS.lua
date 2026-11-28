@@ -42,7 +42,7 @@ return {
   menu = {
     -- Right-click context menu on list-view buffers (ui.contextmenu from
     -- ui.nvim; entries provided by sandbox.integrations.menu). Drawn by
-    -- nvzone/menu when installed, ui.kit.menu otherwise -- this only gates
+    -- ui.kit.menu -- this only gates
     -- whether the trigger and entries are offered at all.
     enable = true,
   },

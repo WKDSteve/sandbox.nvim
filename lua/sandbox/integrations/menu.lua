@@ -1,7 +1,6 @@
 ---@module 'sandbox.integrations.menu'
----@brief Context-menu entries for ui.contextmenu (ui.nvim). nvzone/menu is
---- only ui.contextmenu's preferred *renderer*, not a hard requirement for
---- the menu to appear — absent, ui.kit.menu draws the same entries.
+---@brief Context-menu entries for ui.contextmenu (ui.nvim), which draws them
+--- with its kit renderer (ui.kit.menu).
 ---@description
 --- sandbox.nvim "owns" every list-view buffer it creates (container/image/
 --- volume/network), so the trigger lives centrally in

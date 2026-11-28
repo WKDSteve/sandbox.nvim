@@ -18,10 +18,8 @@ one function to bind its rows, and it hands the buffer to ui.nvim's
 image/volume/network lists without per-list wiring. The entries are built
 with `ui.contextmenu.entry`/`submenu`.
 
-Drawing the menu is ui.contextmenu's job, not sandbox.nvim's: with its
-default `renderer = "auto"` it uses [nvzone/menu](https://github.com/nvzone/menu)
-when that is installed and ui.nvim's own `ui.kit.menu` otherwise, so the
-menu works without nvzone/menu. sandbox.nvim never opens a context menu on
+Drawing the menu is ui.contextmenu's job, not sandbox.nvim's: ui.nvim's own
+`ui.kit.menu` draws it. sandbox.nvim never opens a context menu on
 its own initiative beyond this trigger.
 - **Module:** `sandbox/integrations/menu.lua` (`M.items`, `M.submenu`),
   `sandbox/ui/list_actions.lua` (`M.set_keymaps`, trigger binding)

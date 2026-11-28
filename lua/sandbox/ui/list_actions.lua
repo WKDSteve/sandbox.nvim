@@ -7,9 +7,8 @@
 --- entries from sandbox.integrations.menu) mirroring these same keymaps —
 --- every list view calls `M.set_keymaps` to bind its rows, so the menu
 --- trigger comes along for free instead of needing separate wiring per
---- list type. Gated on `config.menu.enable` (default true); nvzone/menu
---- is only a renderer preference there, not an on/off switch — absent,
---- the menu still renders, via ui.kit.menu.
+--- list type. Gated on `config.menu.enable` (default true);
+--- ui.kit.menu draws it.
 local autocmd = require("lib.nvim.bindings.autocmd")
 local contextmenu = require("ui.contextmenu")
 
